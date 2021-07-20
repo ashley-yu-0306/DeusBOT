@@ -1,0 +1,6 @@
+id,level,descriptor,base,location_type,location_id,coffer_id
+1,1,wooden,35,tutorial,t1,
+2,5,broken,63,dungeon,d1,3
+3,10,oniric,135,dungeon,d2,
+4,15,reinforced,264,dungeon,d3,
+5,20,thalorian,407,dungeon,d4,

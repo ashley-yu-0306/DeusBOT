@@ -1,0 +1,9 @@
+mode,name,description
+hard,Drag Down,The ground drags everyone down! (**Effect**: *everyone loses 15% speed and gains a 55% chance to perform a basic attack when targeted with a melee attack*)
+normal,Tank Summon,A magic circle appears on the ceiling! A giant golem drops down and crosses its arms while facing your party. (**Efect**: *the golem casts a permanent taunt and takes 10% reduced damage. Members of the opposing party cannot be attacked until the golem dies.*)
+hard,Tank Summon,A magic circle appears on the ceiling! A giant golem drops down and crosses its arms. (**Efect**: *the golem casts a permanent taunt and takes 25% reduced damage. Members of the opposing party cannot be attacked until the golem dies.*)
+normal,Devilish Magic,The room reeks of the devil! (**Effect**: *any magic damage is reduced by 20%*)
+hard,Devilish Magic,The room reeks of the devil! (**Effect**: *any magic damage is reduced by 30%*)
+normal,Holy Health,The goddess' blessings radiate the floor! (**Effect**: *members of the allied party will regain 5% of their maximum health every turn*)
+normal,Holy Shrine,Your party runs into a holy shrine on the way to the next floor! (**Effect**: *members of the allied party regain 30% of their maximum health*)
+

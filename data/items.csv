@@ -1,0 +1,4 @@
+item_id,name,verb,description,apcost,shopcost,target,stat_id,stat_change,base,source,category1,category2
+1,small health pot, restored ,Heals 15% of your maximum HP.,5,150,user,1,0.15,max_hp,user,consumables,
+2,large health pot, restored ,Heals 35% of your maximum HP.,10,300,user,1,0.35,max_hp,user,consumables,
+3,broken gear coffer,,Contains Broken gear and miscellaneous loot.,,1500,,,,,,coffers,
