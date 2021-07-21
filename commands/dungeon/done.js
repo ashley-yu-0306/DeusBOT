@@ -1,11 +1,7 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
 const userUTIL = require('../../utils/user.js');
 const serverUTIL = require('../../utils/server.js');
 const formatUTIL = require('../../utils/format.js');
 const Dungeon = require('../../classes/dungeon.js');
-require('dotenv').config();
-const prefix = process.env.PREFIX;
 const CombatController = require('../../classes/combatController.js');
 
 module.exports = {

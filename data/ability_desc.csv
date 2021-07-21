@@ -1,4 +1,4 @@
-move_id,name,verb,noun,chain,summary,description
+id,name,verb,noun,chain,summary,description
 1,Bash, strikes ,,,,Damage and stun the target for 1 turn.
 2,Fireball, burns ,,,,Damage and burn the target for 1 turn.
 3,Quick Strike, strikes ,,,,Strike to damage the target twice.

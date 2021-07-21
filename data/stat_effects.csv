@@ -1,4 +1,4 @@
-stat_id,name,description
+id,name,description
 1,HP,"The users's health."
 2,Turn,"The users's turn."
 3,Damage Taken,"The damage that the user takes."

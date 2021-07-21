@@ -1,4 +1,4 @@
-move_id,apcost,stacks,maxstacks,decay,status_effect,buff,target,type,side,stat_id,stat_change,stat_condition_type,stat_condition_name,base,source,chain_id,chain_amnt,chain_req_id,chain_req_amnt
+id,apcost,stacks,maxstacks,decay,status_effect,buff,target,type,side,stat_id,stat_change,stat_condition_type,stat_condition_name,base,source,chain_id,chain_amnt,chain_req_id,chain_req_amnt
 1,10,,,,false,,single,physical,other,1,-1,,,potency,user,6,1,, 
 2,10,,,,false,,single,magic,other,1,-1,,,potency,user,7,1,,
 3,10,,,,false,,single,physical,other,1,-2,,,potency,user,,,,

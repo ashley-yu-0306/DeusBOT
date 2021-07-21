@@ -1,12 +1,7 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
 const userUTIL = require('../../utils/user.js');
 const serverUTIL = require('../../utils/server.js');
 const formatUTIL = require('../../utils/format.js');
 const Dungeon = require('../../classes/dungeon.js');
-require('dotenv').config();
-const prefix = process.env.PREFIX;
-const CombatController = require('../../classes/combatController.js');
 
 module.exports = {
   name: 'do',
@@ -18,10 +13,8 @@ module.exports = {
       userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
         if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
         var dungeon = Dungeon.getDungeon(server.activedungeon);
-        // User is not in any party
         const party_index = dungeon.getPartyNumber(user.id) - 1;
         if (party_index == -1) { formatUTIL.sendDungeonMessage(message, 'nopartyerror'); return; }
-        // Message not in dungeon channel
         const channel = server.pchannels[party_index];
         if (channel != message.channel.id) { formatUTIL.sendDungeonMessage(message, 'channelerror', channel); return; }
         const mem_index = dungeon.getPartyMemberIndex(user.id);
