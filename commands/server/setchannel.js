@@ -1,13 +1,7 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
-const userUTIL = require('../../utils/user.js');
 const serverUTIL = require('../../utils/server.js');
-const Dungeon = require('../../classes/dungeon.js');
 const Format = require('../../utils/format.js');
 const updateUTIL = require('../../utils/update.js');
 const rolesUTIL = require('../../utils/roles.js');
-require('dotenv').config();
-const prefix = process.env.PREFIX;
 
 module.exports = {
   name: 'setchannel',

@@ -50,25 +50,22 @@ class Monster {
    */
   constructor(spawned, lesser, boss, type, unique) {
     this.id = spawned + 1;
-    var dungeon = DB.monsters.get(type.id);
-    var array;
+    var dungeon = DB.monsters[type.id];
+    var monsters;
     this.lesser = false;
     this.boss = false;
-    if (boss) { array = Array.from(dungeon.boss.keys()); this.boss = true; }
-    else if (lesser) { array = Array.from(dungeon.lesser.keys()); this.lesser = true; }
-    else array = Array.from(dungeon.greater.keys());
-    var name = array[Monster.getRandomInt(0, array.length)];
-    var monster;
-    if (boss) monster = dungeon.boss.get(name);
-    else if (lesser) monster = dungeon.lesser.get(name);
-    else monster = dungeon.greater.get(name);
+    if (boss) { monsters = dungeon.boss; this.boss = true; }
+    else if (lesser) { monsters = dungeon.lesser; this.lesser = true; }
+    else monsters = dungeon.greater;
+    let keys = Object.keys(monsters);
+    let name = keys[Monster.getRandomInt(0, keys.length)];
     switch (unique) {
       case Monster.UNIQUE.goblin_group:
-        if (Monster.getRandomInt(0, 10) < 7) this.setStats(dungeon.lesser.get('goblin'));
-        else this.setStats(monster);
+        if (Monster.getRandomInt(0, 10) < 7) this.setStats(dungeon.lesser['goblin']);
+        else this.setStats(monsters[name]);
         break;
       default:
-        this.setStats(monster); break;
+        this.setStats(monsters[name]); break;
     }
   }
 }

@@ -1,15 +1,16 @@
 const DB = require('./db.js');
+const Party = require('../classes/party.js');
 
 exports.updateUser = async (id, lastmsg, busy, partyid, inventory, equipped, profile, hp = undefined) => {
   if (hp == undefined) {
-    var index = DB.STATS_ORDER.indexOf(profile.job.toLowerCase());
-    var hpbase = DB.stats.get('HPbase')[index];
-    var hpgs = DB.stats.get('HPgs')[index];
+    let job = profile.job.toLowerCase();
+    var hpbase = parseInt(DB.p_stats['HPbase'][job]);
+    var hpgs = parseInt(DB.p_stats['HPgs'][job]);
     profile.hp = Math.ceil(hpbase + (hpgs * (profile.level - 1) * (0.7025 + (0.0175 * (profile.level - 1)))));
     profile.maxhp = profile.hp;
-    profile.physdmg = DB.stats.get('PHYSbase')[index];
-    profile.magicdmg = DB.stats.get('MAGICbase')[index];
-    profile.armor = DB.stats.get('ARMORbase')[index];
+    profile.physdmg = parseInt(DB.p_stats['PHYSbase'][job]);
+    profile.magicdmg = parseInt(DB.p_stats['MAGICbase'][job]);
+    profile.armor = parseInt(DB.p_stats['ARMORbase'][job]);
   }
   const user = {
     id: id,
@@ -20,6 +21,7 @@ exports.updateUser = async (id, lastmsg, busy, partyid, inventory, equipped, pro
     equipped: equipped,
     profile: profile
   }
+  if (user.partyid != -1) Party.updateUserGP(user);
   await DB.eUpdateEntry(DB.eTABLES.user, user);
 }
 

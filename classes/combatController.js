@@ -23,15 +23,15 @@ class CombatController {
 
   static hasSE(target, id) {
     for (let i = 0; i < target.stateffects.length; i++) {
-      if (target.stateffects[i].move_id == id) return i;
+      if (target.stateffects[i].id == id) return i;
     }
     return -1;
   }
 
   // Combat sum is as follows: [user] + summary1 (action) + [target] + summary2 + [amount] + summary3 (stat name)
-  static parseAction(usercasted, player, monster, players, monsters, action, chain, item, prevamnt) {
+  static parseAction(usercasted, player, monster, party, monsters, action, chain, item, prevamnt) {
     var naction = Object.assign({}, action);
-    const stat = action.stat_id == '' ? undefined : DB.stat_effects.get(action.stat_id).name;
+    const stat = action.stat_id == '' ? undefined : DB.se[parseInt(action.stat_id)].name;
     var combatsum = "";
     var amnt = 0;
     // -1 = affect player party, 1 = affect monster party
@@ -56,7 +56,7 @@ class CombatController {
             if (action.target == 'single') {
               if (action.source == 'user') {
                 if (action.status_effect == 'true') {
-                  const index = this.hasSE(monster, action.move_id);
+                  const index = this.hasSE(monster, action.id);
                   if (index >= 0) {
                     var se = monster.stateffects[index];
                     se.caster = player.id;
@@ -86,7 +86,7 @@ class CombatController {
                 if (action.status_effect == 'true') {
                   for (let i = 0; i < monsters.length; i++) {
                     var monster = monsters[i];
-                    const index = this.hasSE(monster, action.move_id);
+                    const index = this.hasSE(monster, action.id);
                     if (index >= 0) {
                       var se = monster.stateffects[index];
                       se.caster = player.id;
@@ -138,7 +138,7 @@ class CombatController {
         } else if (action.side == 'user') {
           if (usercasted) {
             if (action.status_effect == 'true') {
-              const index = this.hasSE(player.combat, action.move_id);
+              const index = this.hasSE(player.combat, action.id);
               if (index >= 0) {
                 var se = player.combat.stateffects[index];
                 se.caster = player.id;
@@ -158,10 +158,10 @@ class CombatController {
         break;
     }
     const mon_name = "(" + monster.id + ") " + monster.name + " ";
-    const desc = DB.a_desc.get(action.move_id);
+    const desc = DB.a_desc[action.id];
     if (action.status_effect == 'false') {
       if (item) {
-        combatsum += player.tag + DB.a_desc.get(action.move_id).verb + amnt + stat + " with " + action.name + ". ";
+        combatsum += player.tag + DB.a_desc[action.id].verb + amnt + stat + " with " + action.name + ". ";
       } else {
         if (usercasted) {
           if (desc.chain == "") combatsum += player.tag + desc.verb + (action.side == 'other' ? action.target == 'single' ? mon_name : " all enemies " :
@@ -174,7 +174,7 @@ class CombatController {
           }
         }
         if (chain != undefined && chain.status_effect == 'true') {
-          var name = DB.a_desc.get(chain.move_id).name;
+          var name = DB.a_desc[chain.id].name;
           if (chain.side == 'other') combatsum += "Inflicted ";
           else combatsum += "Granted ";
           if (chain.decay == 'true') combatsum += name + " for " + chain.stacks + " turns.";
@@ -182,18 +182,18 @@ class CombatController {
         }
       }
     }
-    return [combatsum, player, pupdate, monster, players, monsters, affectall, chain, amnt];
+    return [combatsum, player, pupdate, monster, party, monsters, affectall, chain, amnt];
   }
 
   static parseSE(floor, target, isuser, userCombat = undefined) {
     var comsum = [];
     for (let i = 0; i < target.stateffects.length; i++) {
       var effect = target.stateffects[i];
-      const desc = DB.a_desc.get(effect.move_id);
+      const desc = DB.a_desc[effect.id];
       // Only decaying status effects affect stats
       if (effect.decay == 'true') {
         if (effect.base == 'potency') {
-          const stat = DB.stat_effects.get(effect.stat_id);
+          const stat = DB.se[effect.stat_id];
           if (!isuser) {
             const user = floor.dungeon.getUserInParty(effect.caster_id);
             var amnt;
@@ -209,7 +209,7 @@ class CombatController {
         if (typeof effect.stacks == 'string') effect.stacks = parseInt(effect.stacks);
         effect.stacks -= 1;
         if (effect.stacks <= 0) {
-          if (effect.move_id == 6) target.unstun = true;
+          if (effect.id == 6) target.unstun = true;
           target.stateffects.splice(i, 1);
         }
         if (!isuser && target.hp <= 0) {
@@ -223,14 +223,16 @@ class CombatController {
     return [target, comsum];
   }
 
-  static resolveCombat(pid, floor, channel, users) {
+  static resolveCombat(pid, floor, channel, party) {
     var combatsum = [];
     var args = [];
     var pupdates = [];
 
     // Parse user actions
-    for (let i = 0; i < users.length; i++) {
-      var user = users[i];
+    for (let i = 0; i < party.members.length; i++) {
+      console.log("NEW PLAYER ")
+      console.log(" ")
+      var user = party.members[i];
       pupdates[i] = false;
       const queue_length = user.combat.actionqueue.length;
       var lastamnt = 0;
@@ -256,14 +258,18 @@ class CombatController {
           }
         }
         while (action != undefined) {
-          var chain = DB.a_meta.get(action.chain_id);
-          var result = this.parseAction(true, user, monster, users, floor.monsters, action, chain, args[0] == 'use', lastamnt);
+          var chain = action.chain_id == '' ? undefined : DB.a_meta[action.chain_id];
+          var result = this.parseAction(true, user, monster, party, floor.monsters, action, chain, args[0] == 'use', lastamnt);
           lastamnt = result[8];
           if (result[2]) pupdates[i] = true;
           user = result[1];
           if (result[6] == 1) {
             floor.monsters = result[5];
+            console.log("272")
+            console.log(chain)
             if (chain != undefined) {
+              console.log("275")
+              console.log(chain)
               chain = Object.assign({}, chain);
               chain.target = 'all';
             }
@@ -291,7 +297,7 @@ class CombatController {
         }
       }
       user.combat.done = false;
-      users[i] = user;
+      party.members[i] = user;
     }
     // TODO: Complete monster combat here 
     for (let i = 0; i < floor.monsters.length; i++) {
@@ -318,10 +324,10 @@ class CombatController {
     }
 
     // Update user profiles if necessary
-    for (let i = 0; i < users.length; i++) {
-      var user = users[i];
+    for (let i = 0; i < party.members.length; i++) {
+      var user = party.members[i];
       if (floor.cleared) {
-        var set = DB.equipment.get("d" + floor.dungeon.type.id);
+        var set = DB.equipment["d" + floor.dungeon.type.id];
         var item = Item.makeItem(parseInt(set.coffer_id), 1);
         item.dungeonid = floor.dungeon.type.id;
         userUTIL.updateItem(item, user.usergp.inventory);
@@ -340,19 +346,19 @@ class CombatController {
       }
     }
     Format.formatDungeonSummary(combatsum, channel);
-    floor.dungeon.partyList[pid] = users;
+    floor.dungeon.partyList[pid] = party;
     if (floor.cleared) {
       setTimeout(function () { Format.formatDungeonResults(floor, channel) }, 3500);
       setTimeout(function () {
         var user_r = [];
-        for (let user of users) {
+        for (let user of party.members) {
           user_r.push(channel.guild.members.cache.get(user.id));
         }
         rolesUTIL.removeRole(user_r, floor.dungeon.roles[pid]);
         Dungeon.removeDungeon(floor.dungeon);
       }, 63500);
     } else {
-      setTimeout(function () { Format.formatDungeonCombat(floor, channel, users); }, 3500);
+      setTimeout(function () { Format.formatDungeonCombat(floor, channel, party); }, 3500);
     }
   }
 

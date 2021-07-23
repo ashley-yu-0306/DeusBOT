@@ -46,9 +46,7 @@ const parseCommand = function (message) {
   if (!client.commands.has(command)) return;
   if (command == 'setchannel') args.push(client.channels);
   client.commands.get(command).execute(message, args);
-
 }
-
 
 client.once('ready', () => {
   initCommands();

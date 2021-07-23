@@ -20,15 +20,23 @@ module.exports = {
         // Message not in dungeon channel
         const channel = server.pchannels[party_index];
         if (channel != message.channel.id) { formatUTIL.sendDungeonMessage(message, 'channelerror', channel); return; }
+        console.log("party members" )
+        console.log(dungeon.partyList[party_index].members)
         const mem_index = dungeon.getPartyMemberIndex(user.id);
-        var pprofile = dungeon.partyList[party_index][mem_index];
+        console.log("member index " + mem_index)
+        var pprofile = dungeon.partyList[party_index].members[mem_index];
+        console.log("personal profile")
+        console.log(pprofile)
         if (pprofile.combat.done) { formatUTIL.sendDungeonMessage(message, 'turncomplete', channel); return; }
         pprofile.combat.done = true;
         var notdone = [];
-        for (let user of dungeon.partyList[party_index]) {
+        console.log("party index " + party_index)
+        for (let user of dungeon.partyList[party_index].members) {
+          console.log("checking each member....")
+          console.log(user)
           if (!user.combat.done) notdone.push(user.tag);
         }
-        formatUTIL.sendDungeonMessage(message, 'diddone', [dungeon.partyList[party_index][mem_index].combat.actionqueue, notdone]);
+        formatUTIL.sendDungeonMessage(message, 'diddone', [dungeon.partyList[party_index].members[mem_index].combat.actionqueue, notdone]);
         if (notdone.length > 0) return;
         CombatController.resolveCombat(party_index, dungeon.activeFloors[party_index], message.channel, dungeon.partyList[party_index]);
       })

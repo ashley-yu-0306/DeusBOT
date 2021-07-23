@@ -3,11 +3,9 @@ const emoji = require('../data/emojis.js');
 const messages = require('../data/messages.js');
 const DB = require('./db.js');
 require('dotenv').config();
-const prefix = process.env.PREFIX;
 const updateUTIL = require('./update.js');
 const userUTIL = require('./user.js');
 const rolesUTIL = require('./roles.js');
-const Dungeon = require('../classes/dungeon.js');
 const Trading = require('../classes/trading.js');
 const Party = require('../classes/party.js');
 const loot = require('../data/loot.js');
@@ -82,6 +80,33 @@ class Format {
         string = args[0] + sermsg.dupwarning1 + args[1] + sermsg.dupwarning2; break;
       default:
         string = ""; break;
+    }
+    message.channel.send(string);
+  }
+
+  static sendPartyMessage = function (message, type, args = undefined) {
+    console.log("88")
+    var pmsg = messages.partymessage;
+    var string;
+    switch (type) {
+      case 'switchlock':
+        if (args[0]) string = pmsg.lock;
+        else string = pmsg.unlock;
+        break;
+      case 'usernotinparty':
+        string = pmsg.usernotinparty; break;
+      case 'appointsuccess':
+        string = pmsg.appointsuccess1 + args[0] + pmsg.appointsuccess2; break;
+      case 'kicksuccess':
+        string = pmsg.kicksuccess1 + args[0] + pmsg.kicksuccess2; break;
+      case 'kickleader': string = pmsg.kickleader; break;
+      case 'hasleft': string = args[0] + pmsg.hasleft; args[1].send(string); break;
+      case 'disband_channel': string = pmsg.disband; break;
+      case 'disband_dm': string = pmsg.disband; args[0].send(string); break;
+      case 'disband_success': string = pmsg.disband_success; break;
+      case 'leaderonly': string = pmsg.leaderonly; break;
+      case 'newleader': string = args[0] + pmsg.newleader; args[1].send(string); return;
+      case 'selfleader': string = pmsg.selfleader; args[0].send(string); return;
     }
     message.channel.send(string);
   }
@@ -165,6 +190,22 @@ class Format {
         num == 1 ? string += dunmsg.joinsuccess3single : string += dunmsg.joinsuccess3plural;
         message.author.send(string);
         return;
+      case 'partyjoinsuccess':
+        var dungeon = args[0], party = args[1];
+
+        return;
+      case 'partyjoinnotif':
+        var party = args[0], userdp = args[1], open = args[2];
+        for (let i = 0; i < Object.keys(party.members).length; i++) {
+          let user = party.members[i];
+          str += (i == Object.keys(party.members).length - 1 ? "and " : "") + user.tag +
+            "(Lv. " + user.usergp.profile.level + ")" + (i == Object.keys(party.members).length - 1 ? " " : ", ");
+        }
+        str += dunmsg.joinnotif1;
+        if (open == 0) { string += dunmsg.joinnotiffull; }
+        else if (open == 1) { string += dunmsg.joinnotifopensingle; }
+        userdp.send(string);
+        return;
       case 'joinnotif':
         var usergp = args[0], userdp = args[1], open = args[2];
         string = message.author.tag + " (Lv. " + usergp.profile.level + ")" + dunmsg.joinnotif1;
@@ -193,7 +234,6 @@ class Format {
         var userdp = args[0], max = args[1];
         string = messages.dungeonmessage.maxreached;
         if (max < 6) string += messages.dungeonmessage.notmaxcapacity1 + max + messages.dungeonmessage.notmaxcapacity2;
-        userdp.send(string);
         return;
       case 'autostart':
         for (let i = 0; i < args[2]; i++) {
@@ -235,8 +275,12 @@ class Format {
     switch (type) {
       case 'finderror':
         string = usermsg.finderror; break;
+      case 'notinparty':
+        string = usermsg.notinparty; break;
       case 'inviteself':
         string = usermsg.inviteself; break;
+      case 'someoneinerror':
+        string = usermsg.someoneinerror; break;
       case 'leaderonlyinvite':
         string = usermsg.leaderonlyinvite; break;
       case 'notintrade':
@@ -254,9 +298,9 @@ class Format {
       case 'tradeself':
         string = usermsg.tradeself; break;
       case 'busydungeon':
-        string = user.busydungeon; break;
+        string = usermsg.busydungeon; break;
       case 'targetbusydungeon':
-        string = user.targetbusydungeon; break;
+        string = usermsg.targetbusydungeon; break;
       case 'nickremove':
         string = usermsg.nickremove; break;
       case 'cancel':
@@ -314,14 +358,14 @@ class Format {
   }
 
   static formatPartyJoin = function (message, _, args) {
-    message.channel.send(args[0] + " has successfully joined " + args[1] + "'s party.");
+    message.channel.send(args[0].tag + " has successfully joined " + args[1].tag + "'s party.");
     let partyid = args[2], party;
     if (partyid == -1) {
-      party = new Party(args[3], args[4]);
-      Party.parties.set(party.party_id, party, args[1], args[0]);
+      party = new Party(args[3], args[4], args[1], args[0]);
+      Party.parties.set(party.party_id, party);
       updateUTIL.updateUser(args[3].id, args[3].lastmsg, args[3].busy, party.party_id, args[3].inventory,
         args[3].equipped, args[3].profile, args[3].profile.hp);
-    } else { party = Party.parties.get(partyid); party.joinParty(args[4]); }
+    } else { party = Party.parties.get(partyid); party.joinParty(args[4], args[0]); }
     updateUTIL.updateUser(args[4].id, args[4].lastmsg, args[4].busy, party.party_id, args[4].inventory,
       args[4].equipped, args[4].profile, args[4].profile.hp);
   }
@@ -352,7 +396,6 @@ class Format {
 
   static awaitButton = async (message, row, embed, type, timer, replyFunction, args = undefined, isconfirm = false, retry = false, target_id = undefined) => {
     let filter = b => b.id.startsWith((target_id == undefined ? message.author.id : target_id) + type);
-    console.log((target_id == undefined ? message.author.id : target_id) + type)
     message.channel.send(embed, row).then((bot_msg) => {
       Format.awaitButtonHelper(message, filter, bot_msg, type, timer, replyFunction, args, isconfirm, retry, target_id);
     })
@@ -439,7 +482,7 @@ class Format {
     const ptitle = user.profile.title != "" ? "[" + user.profile.title + "] " : "";
     contents.push("Displaying " + message.author.tag + "'s " + ptitle + "Profile");
     contents.push(" ");
-    const plevel = "Level: " + user.profile.level + " (" + user.profile.exp + "/" + DB.exp[user.profile.level - 1] + ")";
+    const plevel = "Level: " + user.profile.level + " (" + user.profile.exp + "/" + DB.exp_req[user.profile.level - 1].exp + ")";
     const pnick = "Nickname: " + user.profile.nickname;
     const pclass = "Class: " + Format.capitalizeFirsts(user.profile.job);
     const physdmg = "PHYS Damage: " + user.profile.physdmg;
@@ -498,7 +541,7 @@ class Format {
 
   static formatPurchaseReply = function (message, _, args) {
     let user = args[0], item = args[1];
-    userUTIL.updateItem(item[1], user.inventory);
+    userUTIL.updateItem(item, user.inventory);
     updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, user.profile.hp);
     Format.sendUserMessage(message, 'buysuccess');
   }
@@ -536,19 +579,14 @@ class Format {
   }
 
   static formatParty = function (message, party) {
-    let contents = ["```"];
-    for (let key of party.members.keys()) {
+    let contents = ["```css"];
+    for (let key of Object.keys(party.members)) {
       let user = party.members[key];
-      console.log("key " + key)
-      console.log("party members")
-      console.log(party.members)
-      console.log('party members at key')
-      console.log(party.members[key])
-      if (party.isLeader(user.usergp.id)) leader = user;
-      contents.push((party.isLeader(user.usergp.id) ? "[Leader] " : "") + user.usergp.profile.level + " " +
+      contents.push((party.isLeader(user.usergp.id) ? "[Leader] " : "         ") + "(Lv. " +
+        user.usergp.profile.level + (user.usergp.profile.level < 10 ? " " : "") + ") " +
         user.tag + " (HP " + user.usergp.profile.hp + "/" + user.usergp.profile.maxhp + ")");
     }
-    contents.push('```');
+    contents.push('```', ' ', 'Maximum members: 4, Locked: ' + party.locked);
     let embed = Format.makeEmbed().setDescription(contents)
       .setTitle("Party Details");
     message.channel.send(embed);
@@ -578,7 +616,7 @@ class Format {
   static formatMerchantReply = function (message, choice, _) {
     var contents = [messages.merchant[choice], " "];
     for (let item_id of loot.merchant_loot[choice]) {
-      const item = DB.items.get(item_id);
+      const item = DB.items[item_id];
       var string = "[" + item.shopcost + " coins] **" + Format.capitalizeFirsts(item.name) + "**: " +
         item.description;
       contents.push(string);
@@ -600,8 +638,8 @@ class Format {
   static formatAdvance = function (message, user) {
     const contents = [messages.advanceembed.proceed];
     let row = new MessageActionRow();
-    for (let key of DB.advanced.keys()) {
-      let entry = DB.advanced.get(key);
+    for (let key of Object.keys(DB.p_aclasses)) {
+      let entry = DB.p_aclasses[key];
       if (entry.subclass_name.toString() == user.profile.job) {
         let button = new MessageButton()
           .setStyle('blurple')
@@ -626,9 +664,9 @@ class Format {
           let button = collected.get(keys[0]);
           const job = button.id.slice((message.author.id + "jobadvance").length).trim();
           message.channel.send(messages.advancemessage.success);
-          var basic_id = DB.advanced.get(job).base_ability_id;
-          var basic = DB.a_meta.get(basic_id);
-          basic.name = DB.a_desc.get(basic_id).name;
+          var basic_id = DB.p_aclasses[job].base_ability_id;
+          var basic = DB.a_meta[basic_id];
+          basic.name = DB.a_desc[basic_id].name;
           user.profile.job = job;
           user.equipped.abilities.push(basic);
           updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, undefined);
@@ -655,12 +693,12 @@ class Format {
   static foramtPartyList = function (list, embed) {
     for (let i = 0; i < list.length; i++) {
       var value = "";
-      for (let j = 0; j < list[i].length; j++) {
+      for (let j = 0; j < list[i].members.length; j++) {
         if (j == 0) value += "> ";
         else value += "\n> ";
-        value += list[i][j].tag + " (Lv. " + list[i][j].usergp.profile.level + ")";
+        value += list[i].members[j].tag + " (Lv. " + list[i].members[j].usergp.profile.level + ")";
       }
-      embed.addField('Party ' + (i + 1), value, true);
+      embed.addField('Party ' + (i + 1) + (list.locked ? " [Locked]" : ""), value, true);
     }
     return embed;
   }
@@ -671,7 +709,7 @@ class Format {
     const header = "DUNGEON CLEARED";
     var hsp = (60 - header.length) / 2;
     contents.push(" ".repeat(Math.floor(hsp)) + header);
-    var text1 = "- All participants granted [1x " + Format.capitalizeFirsts(DB.equipment.get("d" + floor.dungeon.type.id).descriptor) + " Gear Coffer]!";
+    var text1 = "- All participants granted [1x " + Format.capitalizeFirsts(DB.equipment["d" + floor.dungeon.type.id].descriptor) + " Gear Coffer]!";
     var tsp1 = (60 - text1.length) / 2;
     var text2 = "- All participants granted " + floor.dungeon.type.gold + " gold!"
     var tsp2 = (60 - text2.length) / 2;
@@ -707,7 +745,7 @@ class Format {
     channel.send(contents);
   }
 
-  static formatDungeonCombat = function (floor, channel, users) {
+  static formatDungeonCombat = function (floor, channel, party) {
     const comembed = messages.dungeoncombatembed;
     var title = floor.dungeon.type.name + comembed.floor + floor.floor + "/" + floor.maxfloors + "]";
     var membed = Format.makeEmbed().setTitle(title);
@@ -731,7 +769,7 @@ class Format {
         var i = 0;
         for (let eff of stateffects) {
           // status effect spacing
-          const move = DB.a_desc.get(eff.move_id);
+          const move = DB.a_desc[eff.id];
           const sesp = (box_len - move.name.length - 6) / 2;
           const flare = eff.buff == 'true' ? "+" : "-";
           if (i == 0) setop += " ".repeat(Math.floor(sesp)) + flare + move.name + " (" + eff.stacks + ")" + flare + " ".repeat(box_len - move.name.length - 6 - Math.floor(sesp));
@@ -759,8 +797,8 @@ class Format {
     membed.setDescription(mcontents);
 
     var pcontents = ["```css"];
-    for (let i = 0; i < users.length; i++) {
-      const user = users[i];
+    for (let i = 0; i < party.members.length; i++) {
+      const user = party.members[i];
       pcontents.push("(" + (i + 1) + ") " + user.tag + " (HP " + user.usergp.profile.hp + "/" + user.usergp.profile.maxhp + ") (AP " + user.combat.ap + "/" + (user.combat.bonusap + 15) + ")");
       const len = user.usergp.equipped.consumables.length;
       if (len == 0) pcontents.push("    Item Pouch  No items in pouch");
@@ -827,7 +865,7 @@ class Format {
           if (parties != 0) {
             for (let i = 0; i < parties; i++) {
               var users = [];
-              for (let user of dungeon.partyList[i]) {
+              for (let user of dungeon.partyList[i].members) {
                 users.push(message.guild.members.cache.get(user.id));
               }
               rolesUTIL.assignRole(users, role_details[1][i]);
@@ -841,7 +879,7 @@ class Format {
             setTimeout(function () {
               for (let i = 0; i < dungeon.partyList.length; i++) {
                 dungeon.beginDungeon(i);
-                for (let user of dungeon.partyList[i]) {
+                for (let user of dungeon.partyList[i].members) {
                   user.usergp.busy = 'dungeon';
                   updateUTIL.updateUser(user.usergp.id, user.usergp.lastmsg, user.usergp.busy, user.usergp.partyid,
                     user.usergp.inventory, user.usergp.equipped, user.usergp.profile,
@@ -879,8 +917,8 @@ class Format {
   static formatStart = function (message) {
     const contents = [messages.startembed.description];
     let row = new MessageActionRow();
-    for (let key of DB.primary.keys()) {
-      let entry = DB.primary.get(key);
+    for (let key of Object.keys(DB.p_pclasses)) {
+      let entry = DB.p_pclasses[key];
       let button = new MessageButton()
         .setStyle('blurple')
         .setID(message.author.id + "jobstart " + entry.name)
@@ -919,9 +957,9 @@ class Format {
             raids_completed: 0,
             date_joined: message.createdAt.toString().substring(4, 15)
           };
-          var basic_id = DB.primary.get(job).base_ability_id;
-          var basic = DB.a_meta.get(basic_id);
-          basic.name = DB.a_desc.get(basic_id).name;
+          var basic_id = DB.p_pclasses[job].base_ability_id;
+          var basic = DB.a_meta[basic_id];
+          basic.name = DB.a_desc[basic_id].name;
           var equipped = { armor: { head: null, body: null, legs: null, feet: null, ring: null, weapon: null }, weapon: '', abilities: [basic], consumables: [] };
           updateUTIL.updateUser(message.author.id, 0, "", -1, {}, equipped, profile, undefined);
           message.channel.send(messages.startembed.welcome);

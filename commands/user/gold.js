@@ -1,5 +1,3 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
 const userUTIL = require('../../utils/user.js');
 const Format = require('../../utils/format.js');
 

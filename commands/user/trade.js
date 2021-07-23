@@ -1,5 +1,3 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
 const Trading = require('../../classes/trading.js');
@@ -50,9 +48,8 @@ module.exports = {
           Format.formatTradeEmbed(trade);
           if (done) {
             let target_id = trade_id.slice(0, trade_id.indexOf("_"))
-            if (target_id == user.id) { target_id = trade_id.slice(trade_id.indexOf('_') + 1); console.log("slice") }
+            if (target_id == user.id)  target_id = trade_id.slice(trade_id.indexOf('_') + 1); 
             userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target_gp) {
-
               trade.finalizeTrade(user, target_gp);
               Format.sendUserMessage(message, 'tradecomplete');
             })

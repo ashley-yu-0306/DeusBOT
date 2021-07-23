@@ -52,7 +52,7 @@ class Dungeon {
   difficulty;
   // The average level of this dungeon
   level;
-  // The maximum party size for this dungeon
+  // Maximum # of players a party can have
   partySize;
   // The countdown timer for the dungeon
   timer;
@@ -63,9 +63,12 @@ class Dungeon {
   // The number of completed dungeons
   completed;
   // Whether the dungeon has began 
+  joinLock;
   began;
   descriptor;
   roles;
+  // Maximum # of parties this dungeon can have
+  maxParties;
 
   /**
    * Construct a dungeon.
@@ -74,7 +77,8 @@ class Dungeon {
    * @param {*} floors the number of floors this dungeon will have
    * @param {*} level the average level of monsters (recommended level for players)
    */
-  constructor(guildID, floors, difficulty, level, type) {
+  constructor(guildID, floors, difficulty, level, type, maxparties) {
+    this.maxParties = maxparties;
     this.guildID = guildID;
     this.floors = floors;
     this.difficulty = difficulty;
@@ -89,6 +93,7 @@ class Dungeon {
     while (Dungeon.dungeons.has(num)) {
       num = Dungeon.getRandomInt(1, 999999);
     }
+    this.joinLock = false;
     this.id = num;
     this.activeFloors = [null, null, null, null, null, null];
     this.completed = 0;
@@ -102,7 +107,7 @@ class Dungeon {
 
   updateProfile(id, usergp) {
     for (let party of this.partyList) {
-      for (let user of party) {
+      for (let user of party.members) {
         if (user.id == id) { user.usergp = usergp; return; }
       }
     }
@@ -126,13 +131,13 @@ class Dungeon {
   /** 
    * Returns the party object that user with id [id] is in.
    * 
-   * @param {*} id  the id of the user whose party we are searching for
+   * @param {*} id the id of the user whose party we are searching for
    * @returns       the object representing user [id]'s party
    */
   getParty(id) {
     for (let i = 0; i < this.partyList.length; i++) {
-      for (let j = 0; j < this.partyList[i].length; j++) {
-        if (this.partyList[i][j].id == id) return this.partyList[i];
+      for (let j = 0; j < this.partyList[i].members.length; j++) {
+        if (this.partyList[i].members[j].id == id) return this.partyList[i];
       }
     }
     return undefined;
@@ -144,7 +149,7 @@ class Dungeon {
    * @returns   the number of open slots in partyList[this.partyList.length - 1]
    */
   getRemainingSpots() {
-    if (this.partyList.length > 0) return this.partySize - this.partyList[this.partyList.length - 1].length;
+    if (this.partyList.length > 0) return this.partySize - this.partyList[this.partyList.length - 1].members.length;
     return 0;
   }
 
@@ -172,8 +177,8 @@ class Dungeon {
 
   getPartyMemberIndex(id) {
     for (let i = 0; i < this.partyList.length; i++) {
-      for (let j = 0; j < this.partyList[i].length; j++) {
-        if (this.partyList[i][j].id == id) return j;
+      for (let j = 0; j < this.partyList[i].members.length; j++) {
+        if (this.partyList[i].members[j].id == id) return j;
       }
     }
     return -1;
@@ -181,8 +186,8 @@ class Dungeon {
 
   getUserInParty(id) {
     for (let i = 0; i < this.partyList.length; i++) {
-      for (let j = 0; j < this.partyList[i].length; j++) {
-        if (this.partyList[i][j].id == id) return this.partyList[i][j];
+      for (let j = 0; j < this.partyList[i].members.length; j++) {
+        if (this.partyList[i].members[j].id == id) return this.partyList[i].members[j];
       }
     }
     return -1;
@@ -197,8 +202,8 @@ class Dungeon {
    */
   getPartyNumber(id) {
     for (let i = 0; i < this.partyList.length; i++) {
-      for (let j = 0; j < this.partyList[i].length; j++) {
-        if (this.partyList[i][j].id == id) return i + 1;
+      for (let j = 0; j < this.partyList[i].members.length; j++) {
+        if (this.partyList[i].members[j].id == id) return i + 1;
       }
     }
     return -1;
@@ -212,39 +217,60 @@ class Dungeon {
    */
   inParty(id) {
     for (let i = 0; i < this.partyList.length; i++) {
-      for (let j = 0; j < this.partyList[i].length; j++) {
-        if (this.partyList[i][j].id == id) return true;
+      for (let j = 0; j < this.partyList[i].members.length; j++) {
+        if (this.partyList[i].members[j].id == id) return true;
       }
     }
     return false;
   }
 
-  joinParty(id, usergp, userdp) {
-    var used = new Map();
-    var combat = {
-      ap: 15,
-      bonusap: 0,
-      done: false,
-      turn: true,
-      used: used,
-      actionqueue: [],
-      stateffects: []
+  attemptJoin(id = undefined, usergp = undefined, userdp = undefined, party = undefined) {
+    while (this.joinLock) { }
+    console.log("acquired lock 229")
+    this.joinLock = true;
+    for (let i = 0; i < this.partyList.length; i++) {
+      let dunparty = this.partyList[i];
+      if (!dunparty.locked) {
+        let count = party == undefined ? 1 : Object.keys(party.members).length;
+        if (dunparty.members.length + count <= this.partySize) {
+          return this.joinParty(i, id, usergp, userdp, party);
+        }
+      }
     }
-    var user = {
-      id: id,
-      tag: userdp.tag,
-      combat: combat,
-      usergp: usergp,
-      userdp: userdp
-    };
-    if (this.partyList[0] == undefined || this.partyList[this.partyList.length - 1].length == this.partySize) {
-      this.partyList.push([user]);
-      return undefined;
+    if (this.partyList.length < this.maxParties) return this.joinParty(this.partyList.length, id, usergp, userdp, party);
+    console.log("released lock 241")
+    this.joinLock = false;
+    return -1;
+  }
+
+  joinParty(index, id, usergp, userdp, party) {
+    let combat = { ap: 15, bonusap: 0, done: false, turn: true, used: [], actionqueue: [], stateffects: [] };
+    let oldparty = this.partyList[index];
+    if (party == undefined) {
+      let user = { id: id, tag: userdp.tag, combat: combat, usergp: usergp, userdp: userdp };
+      if (oldparty != undefined) {
+        oldparty.members.push(user);
+        console.log("released lock 254")
+        this.joinLock = false;
+      } else {
+        let dunparty = { locked: false, members: [user] };
+        this.partyList[index] = dunparty;
+        console.log("released lock 258")
+        this.joinLock = false;
+      }
+      return oldparty;
     } else {
-      var prev = this.partyList.pop();
-      prev.push(user);
-      this.partyList.push(prev);
-      return prev;
+      let dunparty;
+      if (party.locked || oldparty == undefined) dunparty = { locked: party.locked, members: [] };
+      else dunparty = Object.assign({}, oldparty)
+      for (let name of Object.keys(party.members)) {
+        let member = party.members[name];
+        dunparty.members.push({ id: member.usergp.id, tag: member.tag, combat: combat, usergp: member.usergp, userdp: member.userdp });
+        combat = { ap: 15, bonusap: 0, done: false, turn: true, used: [], actionqueue: [], stateffects: [] };
+      }
+      this.partyList[index] = dunparty;
+      this.joinLock = false;
+      return oldparty;
     }
   }
 
@@ -294,9 +320,9 @@ class Dungeon {
       }
 
       // Set random dungeon type 
-      var n = Dungeon.getRandomInt(1, Object.keys(DB.dungeons).length);
-      var type = DB.dungeons.get(n);
-      return new Dungeon(guild.id, floors, difficulty, level, type);
+      var n = Dungeon.getRandomInt(0, DB.dungeons.length);
+      var type = DB.dungeons[n];
+      return new Dungeon(guild.id, floors, difficulty, level, type, guild.maxparties);
     }
     console.log("Error: Dungeon creation unsuccessful");
     return undefined;
@@ -383,8 +409,8 @@ class Dungeon {
         Dungeon.DUNGEON_DIFFICULTY.NORMAL ? this.dungeon.Floor.NORMAL_EFFECT_CHANCE :
         this.dungeon.Floor.HARD_EFFECT_CHANCE) {
         if (this.difficulty == Dungeon.DUNGEON_DIFFICULTY.NORMAL) {
-          this.effect = DB.normal_effects[Dungeon.getRandomInt(undefined, DB.normal_effects.length)];
-        } else this.effect = DB.hard_effects[Dungeon.getRandomInt(undefined, DB.hard_effects.length)];
+          this.effect = DB.fe_normal[Dungeon.getRandomInt(undefined, DB.fe_normal.length)];
+        } else this.effect = DB.fe_hard[Dungeon.getRandomInt(undefined, DB.fe_hard.length)];
       } else this.effect = null;
 
       // Setting monster variation

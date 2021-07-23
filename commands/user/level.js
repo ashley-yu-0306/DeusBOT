@@ -1,4 +1,3 @@
-const Discord = require('discord.js');
 const DB = require('../../utils/db.js');
 const userUTIL = require('../../utils/user.js');
 const Format = require('../../utils/format.js');
@@ -10,7 +9,7 @@ module.exports = {
   execute(message, args) {
     userUTIL.userData(message).then(function (user) {
       if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
-      Format.formatLevel(message, user, DB.exp[user.profile.level - 1]);
+      Format.formatLevel(message, user, DB.exp_req[user.profile.level-1].exp);
     })
   }
 };

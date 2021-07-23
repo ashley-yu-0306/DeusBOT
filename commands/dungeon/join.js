@@ -1,11 +1,8 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
 const userUTIL = require('../../utils/user.js');
 const serverUTIL = require('../../utils/server.js');
-const formatUTIL = require('../../utils/format.js');
+const Format = require('../../utils/format.js');
 const Dungeon = require('../../classes/dungeon.js');
-require('dotenv').config();
-const prefix = process.env.PREFIX;
+const Party = require('../../classes/party.js');
 
 module.exports = {
   name: 'join',
@@ -15,33 +12,49 @@ module.exports = {
     serverUTIL.serverData(message).then(function (guild) {
       if (guild.activedungeon == null) {
         console.log("Error: Attempting to join non-present dungeon.");
-        formatUTIL.sendDungeonMessage(message, 'joinerror');
+        Format.sendDungeonMessage(message, 'joinerror');
       } else {
         userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
           if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
           if (user.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
           var dungeon = Dungeon.getDungeon(guild.activedungeon);
           // The dungeon has already expired 
-          if (!dungeon.isJoinable()) { formatUTIL.sendDungeonMessage(message, 'expireerror'); return; }
-          // The player is already in the dungeon
-          if (dungeon.inParty(user.id)) { formatUTIL.sendDungeonMessage(message, 'inerror'); return; }
-          // The maximum number of parties has already been reached 
-          if (dungeon.getPartyCount() == guild.maxparties && dungeon.getRemainingSpots() == 0) {
-            formatUTIL.sendDungeonMessage(message, 'maxparties', [message.author, guild.maxparties]);
-            return;
-          }
-
-          var players = dungeon.joinParty(user.id, user, message.author);
-          if (players != undefined) {
-            var open = dungeon.partySize - players.length;
-            for (let player of players) {
-              if (player.usergp.id != user.id) {
-                formatUTIL.sendDungeonMessage(message, 'joinnotif', [user, player.userdp, open]);
+          if (!dungeon.isJoinable()) { Format.sendDungeonMessage(message, 'expireerror'); return; }
+          if (user.partyid == -1) {
+            // The player is already in the dungeon
+            if (dungeon.inParty(user.id)) { Format.sendDungeonMessage(message, 'inerror'); return; }
+            // The maximum number of parties has already been reached 
+            if (dungeon.getPartyCount() == guild.maxparties && dungeon.getRemainingSpots() == 0) {
+              Format.sendDungeonMessage(message, 'maxparties', [message.author, guild.maxparties]);
+              return;
+            }
+            var players = dungeon.attemptJoin(user.id, user, message.author);
+            if (players != undefined) {
+              var open = dungeon.partySize - players.members.length;
+              for (let player of players.members) {
+                if (player.usergp.id != user.id) {
+                  Format.sendDungeonMessage(message, 'joinnotif', [user, player.userdp, open]);
+                }
               }
             }
+            Format.sendDungeonMessage(message, 'joinsuccess', [dungeon, user]);
+          } else {
+            let party = Party.parties.get(user.partyid);
+            for (let id of Object.keys(party.members)) {
+              if (dungeon.inParty(id)) { Format.sendDungeonMessage(message, 'someoneinerror'); return; }
+            }
+            if (party.locked && dungeon.getPartyCount() == guild.maxparties) { Format.sendDungeonMessage(message, 'maxparties'); return; }
+            var players = dungeon.attemptJoin(undefined, undefined, undefined, party);
+            if (players != undefined) {
+              var open = dungeon.partySize - players.members.length - Object.keys(party.members).length;
+              for (let player of players.members) {
+                if (player.usergp.id != user.id) {
+                  Format.sendDungeonMessage(message, 'partyjoinnotif', [party, player.userdp, open]);
+                }
+              }
+            }
+            Format.sendDungeonMessage(message, 'partyjoinsuccess', [dungeon, party]);
           }
-          formatUTIL.sendDungeonMessage(message, 'joinsuccess', [dungeon, user]);
-          console.log("Success: User with id " + user.id + " has successfully joined an active dungeon in server " + guild.id);
         })
       }
     })

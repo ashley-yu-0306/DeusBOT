@@ -1,4 +1,3 @@
-const Discord = require('discord.js');
 const DB = require('./db.js');
 const updateUTIL = require('./update.js');
 const userUTIL = require('./user.js');

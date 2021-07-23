@@ -1,9 +1,7 @@
-const Discord = require('discord.js');
 const DB = require('../../utils/db.js');
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
 const updateUTIL = require('../../utils/update.js');
-const CONTENTS = ['equipment', 'weapons', 'armor', 'consumables', 'items']
 const Item = require('../../classes/item.js');
 const Equipment = require('../../classes/equipment.js');
 const Random = require('../../classes/random.js');
@@ -24,7 +22,7 @@ module.exports = {
       const n = Random.getRandomInt(0, 10);
       var equipment = Equipment.randomEquipFromSet("dungeon", item.dungeonid, n == 5 ? 2 : 1)[0];
       var loot_summary = message.author.tag + " obtained [" + equipment.quantity + "x " + Format.capitalizeFirsts(equipment.name) + "]";
-      const loot_table = Loot.dungeon_loot[item.dungeonid - 1];
+      const loot_table = Loot.dungeon_loot[item.dungeonid];
       var k = Random.getRandomInt(0, loot_table.length);
       var loot_info = loot_table[k];
       var loot = Item.makeItem(loot_info[0], Random.getRandomInt(loot_info[1], loot_info[2] + 1));

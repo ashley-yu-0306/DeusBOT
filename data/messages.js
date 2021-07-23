@@ -14,6 +14,23 @@ exports.merchant = {
   Consumables_helper: "To equip a consumable, use `" + prefix + "equip <slot #> <item name>`. To use an equipped consumable, use `" + prefix + "use <slot #>`."
 }
 
+exports.partymessage = {
+  unlock: 'Successfully unlocked party. If you are in a dungeon lobby, please leave and re-join for the effects to register.',
+  lock: 'Successfully locked party. If you are in a dungeon lobby, please leave and re-join for the effects to register.,',
+  usernotinparty: 'This user is not in your party.',
+  appointsuccess1: 'Successfully appointed ',
+  appointsuccess2: ' as party leader.',
+  kicksuccess1: 'Successfully kicked',
+  kicksuccess2: ' from the party.',
+  leaderonly: 'Only the leader can use party-related commands.',
+  kickleader: 'You cannot kick yourself. If you wish to leave the party, please enter `' + prefix + "p leave`.",
+  disband: 'This party has been disbanded.',
+  hasleft: ' has left the party.',
+  disband_success: 'Successfully disbanded the party.',
+  newleader: ' has been appointed as party leader.',
+  selfleader: 'You have been appointed as party leader.'
+}
+
 exports.servermessage = {
   NaN: ' is not a number. Please enter a number from 1 to 6.',
   OOB: ' is not a valid number. Please enter a number from 1 to 6.',
@@ -75,7 +92,7 @@ exports.usermessage = {
   tradecomplete: 'The trade has completed.',
   notinparty: 'You are not in a party.',
   inviteself: 'You cannot invite yourself to a party.',
-  leaderonlyinvite: 'Only the party leader can invite members to the party.'
+  someoneinerror: 'Someone in your party is already in a dungeon.'
 }
 
 exports.inventoryembed = {
@@ -101,6 +118,10 @@ exports.dungeonmessage = {
   joinnotifopen1plural: 'There are ',
   joinnotifopen2plural: ' open positions left.',
   joinnotiffull: 'The party is now full. ',
+  partyjoinsuccess1: 'Your party has successfully joined the dungeon! Your party is in party ',
+  partyjoinsuccessul1: ' with ',
+  partyjoinsuccessul2: ' other users. You will be notified if others join the party.',
+  partyjoinsuccessl1: '. As your party is locked, no additional members be able to join your room. To unlock your party, enter `' + prefix + "p unlock`.",
   diddone1: 'Action queue confirmed: [',
   diddone2: ']. ',
   diddonewait: 'Now waiting for: ',

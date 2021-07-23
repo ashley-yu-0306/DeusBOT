@@ -7,27 +7,54 @@ class Party {
   party_id;
   leader_id;
   members;
+  locked;
 
-  constructor(leader, invitee, leader_tag, invitee_tag) {
+  constructor(leader, invitee, leader_dp, invitee_dp) {
     this.party_id = Random.getRandomInt(1, 999999);
     while (Party.parties.has(this.party_id)) {
       this.party_id = Dungeon.getRandomInt(1, 999999);
     }
     this.leader_id = leader.id;
-    this.members = [];
-    let leader_obj = { tag: leader_tag, usergp: leader };
-    let invitee_obj = { tag: invitee_tag, usergp: invitee };
+    this.members = {};
+    leader.partyid = this.party_id;
+    invitee.partyid = this.party_id;
+    let leader_obj = { tag: leader_dp.tag, usergp: leader, userdp: leader_dp };
+    let invitee_obj = { tag: invitee_dp.tag, usergp: invitee, userdp: invitee_dp };
     this.members[this.leader_id] = leader_obj;
     this.members[invitee.id] = invitee_obj;
+    this.locked = false;
+  }
+
+  static updateUserGP(user) {
+    let party = Party.parties.get(user.partyid);
+    party[user.id] = user;
+  }
+
+  disband() { Party.parties.delete(this.party_id); }
+
+  inParty(id) {
+    for (let key of Object.keys(this.members)) {
+      let member = this.members[key];
+      if (member.usergp.id == id) return true;
+    }
+    return false;
+  }
+
+  remove(id) {
+    for (let key of Object.keys(this.members)) {
+      let member = this.members[key];
+      if (member.usergp.id == id) { let kicked = Object.assign({}, member); delete this.members[key]; console.log(kicked); return kicked; }
+    }
   }
 
   isLeader(id) { return id == this.leader_id; }
 
   leaveParty(invitee) { this.members.delete(invitee.id); }
 
-  joinParty(invitee) {
-    if (this.members.keys().length == Party.MAX_PARTY) return false;
-    this.members.set(invitee.id, invitee);
+  joinParty(invitee, invitee_dp) {
+    if (Object.keys(this.members).length == Party.MAX_PARTY) return false;
+    let invitee_obj = { tag: invitee_dp.tag, usergp: invitee, userdp: invitee_dp };
+    this.members[invitee.id] = invitee_obj;
     return true;
   }
 }

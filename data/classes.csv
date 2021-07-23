@@ -1,10 +1,10 @@
 level_req,subclass_name,name,description,base_ability_id
-0,,'Warrior',High in HP and defense. Wield a sword and shield and fight in the frontlines!,1
-0,,'Mage',Master of spellcasting and mana. Bend your magic and dominate the battlefield!,2
-0,,'Thief',Nimble and quiet killers. Be efficient on your feet and keep your enemies guessing!,3
-10,Warrior,'Holy Knight',Warrior of light and hero of all. Battle fearlessly to protect those who cannot!,4
-10,Warrior,'Dark Knight',Succumb to the darkness and manipulate black magic. Deliver judgement in place of the cowardly!,8
-10,Mage,'Sorcerer',Commanders of ancient and powerful magic. Control what was once thought to be uncontrollable and make your enemies cower!,11
-10,Mage,'Priest',Leaders in faith and respected by all. Rain hope upon your allies but remain a formidable foe!,12
-10,Thief,'Reaper',Sinister and deadly but flamboyant nonetheless. Harvest the souls of your enemies and bend them to your liking!,16
-10,Thief,'Ninja',Master of speed nicknamed 'the ghost' by many. Leave your enemies dumbfounded as you dominate the battlefield as you manipulate your several chakra points.,18
+0,,Warrior,High in HP and defense. Wield a sword and shield and fight in the frontlines!,0
+0,,Mage,Master of spellcasting and mana. Bend your magic and dominate the battlefield!,1
+0,,Thief,Nimble and quiet killers. Be efficient on your feet and keep your enemies guessing!,2
+10,Warrior,Holy Knight,Warrior of light and hero of all. Battle fearlessly to protect those who cannot!,3
+10,Warrior,Dark Knight,Succumb to the darkness and manipulate black magic. Deliver judgement in place of the cowardly!,7
+10,Mage,Sorcerer,Commanders of ancient and powerful magic. Control what was once thought to be uncontrollable and make your enemies cower!,10
+10,Mage,Priest,Leaders in faith and respected by all. Rain hope upon your allies but remain a formidable foe!,11
+10,Thief,Reaper,Sinister and deadly but flamboyant nonetheless. Harvest the souls of your enemies and bend them to your liking!,15
+10,Thief,Ninja,Master of speed nicknamed 'the ghost' by many. Leave your enemies dumbfounded as you dominate the battlefield as you manipulate your several chakra points.,17

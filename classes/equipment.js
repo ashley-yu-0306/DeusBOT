@@ -85,7 +85,7 @@ class Equipment {
   }
 
   static randomEquipFromSet(type, id, num) {
-    var set = DB.equipment.get((Equipment.KEY[type] + id));
+    var set = DB.equipment[(Equipment.KEY[type] + id)];
     var equipment = [];
     for (let i = 0; i < num; i++) {
       var n = Random.getRandomInt(0, this.PIECE_NAME.length - 1);

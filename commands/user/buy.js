@@ -1,12 +1,7 @@
-const Discord = require('discord.js');
 const DB = require('../../utils/db.js');
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
-const updateUTIL = require('../../utils/update.js');
-const CONTENTS = ['equipment', 'weapons', 'armor', 'consumables', 'items']
 const Item = require('../../classes/item.js');
-const { classCanEquip } = require('../../classes/equipment.js');
-const { MessageActionRow } = require('discord-buttons');
 
 module.exports = {
   name: 'buy',
@@ -27,13 +22,13 @@ module.exports = {
       name = name.trim();
       var entry = undefined;
       for (let item of DB.items) {
-        if (item[1].name == name) { entry = item; break; }
+          if (item.name == name) { entry = item; break; }
       }
       if (entry == undefined) { Format.sendUserMessage(message, 'nosuchitem', [name]); return; }
-
-      const cost = parseInt(entry[1].shopcost) * quantity;
+      Item.makeCategory(entry);
+      const cost = parseInt(entry.shopcost) * quantity;
       if (user.profile.gold < cost) { Format.sendUserMessage(message, 'notenoughgold', [quantity, name, cost]); return; }
-      entry[1].quantity = quantity;
+      entry.quantity = quantity;
       user.profile.gold -= cost;
       const str = 'You are initiating a purchase for [' + quantity + "x] " + Format.capitalizeFirsts(name) + " for " + cost + " gold."
         + " Your remaining balance will be " + user.profile.gold + " gold. Proceed?";

@@ -1,9 +1,5 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
-require('dotenv').config();
-const prefix = process.env.PREFIX;
 
 module.exports = {
   name: 'start',

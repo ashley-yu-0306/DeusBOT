@@ -5,7 +5,6 @@ const REQUESTS = {
   NONREQUIRE: 3 // Require the user to not have a character. Send HAS_CHAR_ERROR if uesr does.
 }
 exports.eREQUESTS = REQUESTS;
-const BUSY_REASONS = {}
 
 /** Get all information about the user from the database, including ID, class, EXP, and level. 
  * 

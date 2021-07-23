@@ -1,11 +1,6 @@
-const Discord = require('discord.js');
-const DB = require('../../utils/db.js');
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
 const updateUTIL = require('../../utils/update.js');
-const CONTENTS = ['equipment', 'weapons', 'armor', 'consumables', 'items']
-const Item = require('../../classes/item.js');
-const { classCanEquip } = require('../../classes/equipment.js');
 const Equipment = require('../../classes/equipment.js');
 
 module.exports = {

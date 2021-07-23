@@ -22,7 +22,7 @@ module.exports = {
         const monster = floor.monsters[args[1] - 1];
         if (monster == null) { formatUTIL.sendDungeonMessage(message, 'invmonsternumber', channel); return; }
         if (monster.dead) { formatUTIL.sendDungeonMessage(message, 'deadmonster', channel); return; }
-        let pprofile = dungeon.partyList[party_index][mem_index];
+        let pprofile = dungeon.partyList[party_index].members[mem_index];
         if (pprofile.combat.done) { formatUTIL.sendDungeonMessage(message, 'turncomplete', channel); return; }
         // User does not have that ability
         if (pprofile.usergp.equipped.abilities.length < args[0] - 1) { formatUTIL.sendDungeonMessage(message, 'abilindexerror'); return; }
@@ -32,7 +32,7 @@ module.exports = {
         pprofile.combat.ap -= abil.apcost;
         const action = ('do ' + args[0] + (args.length > 1 ? " " + args[1] : "")).toLowerCase();
         pprofile.combat.actionqueue.push(action);
-        dungeon.partyList[party_index][mem_index] = pprofile;
+        dungeon.partyList[party_index].members[mem_index] = pprofile;
         formatUTIL.sendDungeonMessage(message, 'didability', [pprofile.combat.actionqueue, pprofile.combat.ap]);
       })
     })

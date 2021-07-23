@@ -1,19 +1,19 @@
 id,name,verb,noun,chain,summary,description
-1,Bash, strikes ,,,,Damage and stun the target for 1 turn.
-2,Fireball, burns ,,,,Damage and burn the target for 1 turn.
-3,Quick Strike, strikes ,,,,Strike to damage the target twice.
-4,Cleave, strikes ,,,,Strike the target and then cleave all opponents for slightly less damage.
-5,Cleave All, cleaves ,,Cleave,,Cleave all opponents for slightly less damage.
-6,Stun,,,, is stunned and unable to act this turn.,The inflicted cannot act this turn.
-7,Burn, burns ,,,,The inflicted takes burn damage this turn.
-8,Soul Steal, strikes ,,,,Strike the target and deal bonus magic damage. Recover a portion of your magic damage dealt as HP.
-9,Soul Manipulation, deals ,bonus magic damage ,Soul Steal,,Deal bonus magic damage. Recover a portion of your magic damage dealt as HP.
-10,Leech, restores ,,,,Recover a portion of your magic damage dealt as HP.
-11,Flare, burns ,,,,Damage all enemies and burn them for 1 turn.
-12,For Faith,,,,,Deal magic damage to the target and gain a stack of Succor (max: 4 stacks).
-13,Succor,,,,,"Casting a healing spell removes all stacks of Succor. There can be a maximum of 4 stacks of Succor. For each stack, increase your next healing spell's power by 15% of its base potency. At 3 stacks, grant healed allies a 2-turn health-regen buff. At 4 stacks, additionally grant allies a spell shield.",
-14,Health Regen,,,,,Regenerate a portion of your health this turn.
-15,Spell Shield,,,,,Remove any status effects that would be applied by the next attack.
-16,Death's Door,,,,,Strike the target and apply a stack of The Cursed (max: 4 stacks).
-17,The Cursed,,,,,Casting a Fear inducing spell removes all stacks of The Reaper's Curse. There can be a maximum of 4 stacks. The inflicted takes 15% increased damage from Reaper class users.
-18,Pressure Point,,,,,Strike the target and apply the activated chakra point's status effect.
+0,Bash, strikes ,,,,Damage and stun the target for 1 turn.
+1,Fireball, burns ,,,,Damage and burn the target for 1 turn.
+2,Quick Strike, strikes ,,,,Strike to damage the target twice.
+3,Cleave, strikes ,,,,Strike the target and then cleave all opponents for slightly less damage.
+4,Cleave All, cleaves ,,Cleave,,Cleave all opponents for slightly less damage.
+5,Stun,,,, is stunned and unable to act this turn.,The inflicted cannot act this turn.
+6,Burn, burns ,,,,The inflicted takes burn damage this turn.
+7,Soul Steal, strikes ,,,,Strike the target and deal bonus magic damage. Recover a portion of your magic damage dealt as HP.
+8,Soul Manipulation, deals ,bonus magic damage ,Soul Steal,,Deal bonus magic damage. Recover a portion of your magic damage dealt as HP.
+9,Leech, restores ,,,,Recover a portion of your magic damage dealt as HP.
+10,Flare, burns ,,,,Damage all enemies and burn them for 1 turn.
+11,For Faith,,,,,Deal magic damage to the target and gain a stack of Succor (max: 4 stacks).
+12,Succor,,,,,"Casting a healing spell removes all stacks of Succor. There can be a maximum of 4 stacks of Succor. For each stack, increase your next healing spell's power by 15% of its base potency. At 3 stacks, grant healed allies a 2-turn health-regen buff. At 4 stacks, additionally grant allies a spell shield.",
+13,Health Regen,,,,,Regenerate a portion of your health this turn.
+14,Spell Shield,,,,,Remove any status effects that would be applied by the next attack.
+15,Death's Door,,,,,Strike the target and apply a stack of The Cursed (max: 4 stacks).
+16,The Cursed,,,,,Casting a Fear inducing spell removes all stacks of The Reaper's Curse. There can be a maximum of 4 stacks. The inflicted takes 15% increased damage from Reaper class users.
+17,Pressure Point,,,,,Strike the target and apply the activated chakra point's status effect.

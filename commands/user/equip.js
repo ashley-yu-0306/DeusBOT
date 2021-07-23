@@ -1,10 +1,7 @@
-const Discord = require('discord.js');
 const DB = require('../../utils/db.js');
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
 const updateUTIL = require('../../utils/update.js');
-const CONTENTS = ['equipment', 'weapons', 'armor', 'consumables', 'items']
-const Item = require('../../classes/item.js');
 const { classCanEquip } = require('../../classes/equipment.js');
 
 module.exports = {
@@ -31,7 +28,7 @@ module.exports = {
       var equipped = user.equipped.armor[item.slot];
       userUTIL.updateEquipped(user.inventory, user.equipped.armor, user.profile, item.slot, item);
       Format.sendUserMessage(message, 'equipsuccess', [item, equipped]);
-      updateUTIL.updateUser(user.id, user.lastmsg, user.partyid, user.inventory, user.equipped, user.profile, user.profile.hp);
+      updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, user.profile.hp);
     })
   }
 };

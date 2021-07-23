@@ -10,14 +10,18 @@ class Item {
     ring: 'rings'
   };
 
-  static makeItem = function (id, quantity) {
-    var item = Object.assign({}, DB.items.get(id));
+  static makeCategory = function (item) {
     var cats = [item.category1];
     if (item.category2 != undefined) cats.push(item.category2);
-    item.quantity = quantity;
-    item.category = cats;
+    item.category = cats
     delete item.category1;
     delete item.category2;
+  }
+
+  static makeItem = function (id, quantity) {
+    var item = Object.assign({}, DB.items[id]);
+    item.quantity = quantity;
+    Item.makeCategory(item);
     return item;
   }
 

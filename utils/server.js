@@ -1,7 +1,5 @@
 const DB = require('../utils/db.js');
 const roleUTILS = require('../utils/roles.js');
-require('dotenv').config();
-const prefix = process.env.PREFIX;
 
 const serverJoin = function (server) {
   const guild = {

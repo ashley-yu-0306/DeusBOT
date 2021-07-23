@@ -18,9 +18,9 @@ const TABLES = {
 exports.eTABLES = TABLES;
 
 exports.p_stats_order = ['', 'warrior', 'mage', 'thief', 'holy knight', 'dark knight', 'sorcerer', 'priest', 'reaper', 'phantom'];
-const p_pclasses = [];
-const p_aclasses = [];
-const p_stats = [];
+const p_pclasses = {};
+const p_aclasses = {};
+const p_stats = {};
 const exp_req = [];
 
 const fe_normal = [];
@@ -39,7 +39,7 @@ const seedData = function (entry, dataset, key_is_name, is_array) {
   if (is_array) dataset.push(entry);
   else {
     if (key_is_name) dataset[entry.name] = entry;
-    else dataset[entry.id] = entry;
+    else { dataset[entry.id] = entry; }
   }
 }
 
