@@ -14,7 +14,7 @@ module.exports = {
   execute(message, args) {
     userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
-      if (user.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
+      if (user.data.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
       if (!DB.sets.includes(args[0])) { Format.sendUserMessage(message, 'nosuchset'); return; }
       var item = user.inventory[args[0] + " gear coffer"];
       if (item == undefined) { Format.sendUserMessage(message, 'nosuchcoffer'); return; }
@@ -31,7 +31,7 @@ module.exports = {
       userUTIL.updateItem(equipment, user.inventory);
       userUTIL.updateItem(loot, user.inventory);
       Format.sendUserMessage(message, 'lootgained', [loot_summary]);
-      updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, user.profile.hp);
+      updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, user.profile.hp);
     })
   }
 };

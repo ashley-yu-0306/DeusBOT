@@ -22,6 +22,7 @@ const p_pclasses = {};
 const p_aclasses = {};
 const p_stats = {};
 const exp_req = [];
+const titles = [];
 
 const fe_normal = [];
 const fe_hard = [];
@@ -76,6 +77,8 @@ const parseCSV = function (path, method, dataset, key_is_name = false, is_array 
       for (let i = 0; i < results.length; i++) {
         method(results[i], dataset, key_is_name, is_array);
       }
+      console.log(titles)
+      exports.titles = titles;
       exports.p_pclasses = p_pclasses;
       exports.p_aclasses = p_aclasses;
       exports.exp_req = exp_req;
@@ -134,3 +137,4 @@ parseCSV('./data/classes.csv', seedClasses, undefined);
 parseCSV('./data/floor_effects.csv', seedEffects, undefined);
 parseCSV('./data/monsters.csv', seedMonsters, undefined);
 parseCSV('./data/equipment.csv', seedEquipment, undefined);
+parseCSV('./data/title.csv', seedData, titles, false, true);

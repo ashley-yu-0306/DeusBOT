@@ -10,7 +10,7 @@ module.exports = {
   execute(message, args) {
     userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
-      if (user.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
+      if (user.data.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
       var quantity = 0;
       var index = 0;
       if (isNaN(args[0])) { quantity = 1; }

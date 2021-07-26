@@ -333,7 +333,7 @@ class CombatController {
         userUTIL.updateItem(item, user.usergp.inventory);
         user.usergp.profile.gold += parseInt(floor.dungeon.type.gold);
         user.usergp.profile.dungeons_completed += 1;
-        user.usergp.busy = '';
+        user.usergp.data.busy = '';
         Dungeon.removeDungeon(floor.dungeon);
       }
       else {
@@ -342,7 +342,7 @@ class CombatController {
         user.combat.used = new Map();
       }
       if (pupdates[i] || floor.cleared) {
-        updateUTIL.updateUser(user.id, user.usergp.lastmsg, user.usergp.busy, user.usergp.partyid, user.usergp.inventory, user.usergp.equipped, user.usergp.profile, user.usergp.profile.hp);
+        updateUTIL.updateUser(user.id, user.usergp.lastmsg, user.usergp.data, user.usergp.inventory, user.usergp.equipped, user.usergp.profile, user.usergp.profile.hp);
       }
     }
     Format.formatDungeonSummary(combatsum, channel);

@@ -11,11 +11,11 @@ module.exports = {
   execute(message, args) {
     userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
-      if (user.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
+      if (user.data.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
       if (args.length == 0) { Format.sendUserMessage(message, 'mentionuser'); return; }
       if (subcommands.includes(args[0])) {
-        if (!user.busy.includes('trade')) { Format.sendUserMessage(message, 'notintrade'); return; }
-        let trade_id = user.busy.slice('trade '.length);
+        if (!user.data.busy.includes('trade')) { Format.sendUserMessage(message, 'notintrade'); return; }
+        let trade_id = user.data.busy.slice('trade '.length);
         let trade = Trading.trades.get(trade_id);
         if (args[0] == 'add' || args[0] == 'a') {
           let quantity, name = '', index = 1;
@@ -64,7 +64,7 @@ module.exports = {
         if (target == undefined) return;
         userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target_gp) {
           if (target_gp == null) { Format.sendUserMessage(message, 'finderrorother'); return; }
-          if (target_gp.busy == 'dungeon') { Format.sendUserMessage(message, 'targetbusydungeon'); return; }
+          if (target_gp.data.busy == 'dungeon') { Format.sendUserMessage(message, 'targetbusydungeon'); return; }
           let string = args[0] + ", " + message.author.tag + " has invited you to a trade. Proceed?";
           Format.formatConfirmation(message, 'Trade', string, Format.formatTradeReply, [target.user.tag, target_id, target_gp, user], target_id, "Accept")
         })

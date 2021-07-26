@@ -37,7 +37,7 @@ exports.grantEXP = async (message, exp = BASE, multi = 1) => {
       physdmg: user.profile.physdmg,
       raids_completed: user.profile.raids_completed
     };
-    updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, profile, add_level > 0 ? undefined : user.hp);
+    updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, profile, add_level > 0 ? undefined : user.hp);
     console.log("Success: User " + user.id + " has gained " + (exp * multi) + " (" + exp + "*" + multi + ") EXP. User now has " + curr_exp + " EXP.");
     if (add_level > 0) {
       message.channel.send("Congratulations, <@" + message.author.id + ">, you have advanced to level " + (user.profile.level + add_level) + "!");

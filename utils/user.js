@@ -25,8 +25,7 @@ exports.userData = async (message, type, other = undefined) => {
     query.Items.forEach(function (item) {
       user = {
         id: item.id,
-        busy: item.busy,
-        partyid: item.partyid,
+        data: item.data,
         lastmsg: item.lastmsg,
         inventory: item.inventory,
         equipped: item.equipped,

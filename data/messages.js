@@ -92,7 +92,10 @@ exports.usermessage = {
   tradecomplete: 'The trade has completed.',
   notinparty: 'You are not in a party.',
   inviteself: 'You cannot invite yourself to a party.',
-  someoneinerror: 'Someone in your party is already in a dungeon.'
+  someoneinerror: 'Someone in your party is already in a dungeon.',
+  enterachnumber: 'Please enter the number of the achievement that you would like additional details for.',
+  nosuchachievement: 'There is no achievement with that ID number. Please try again with another ID number.'
+
 }
 
 exports.inventoryembed = {

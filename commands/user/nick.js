@@ -20,7 +20,7 @@ module.exports = {
         user.profile.nickname = args[0];
         Format.sendUserMessage(message, 'nicksuccess', [args[0]]);
       }
-      updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, user.profile.hp);
+      updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, user.profile.hp);
     })
   }
 };

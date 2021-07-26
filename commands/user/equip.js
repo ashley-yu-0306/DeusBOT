@@ -11,7 +11,7 @@ module.exports = {
   execute(message, args) {
     userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
-      if (user.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
+      if (user.data.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
       if (args.length < 2) { Format.sendUserMessage(message, 'NEargs'); return; }
       if (!DB.sets.includes(args[0])) { Format.sendUserMessage(message, 'nosuchset'); return; }
       var input = "";
@@ -28,7 +28,7 @@ module.exports = {
       var equipped = user.equipped.armor[item.slot];
       userUTIL.updateEquipped(user.inventory, user.equipped.armor, user.profile, item.slot, item);
       Format.sendUserMessage(message, 'equipsuccess', [item, equipped]);
-      updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, user.profile.hp);
+      updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, user.profile.hp);
     })
   }
 };

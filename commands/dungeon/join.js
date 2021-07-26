@@ -16,11 +16,11 @@ module.exports = {
       } else {
         userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
           if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
-          if (user.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
+          if (user.data.busy == 'dungeon') { Format.sendUserMessage(message, 'busydungeon'); return; }
           var dungeon = Dungeon.getDungeon(guild.activedungeon);
           // The dungeon has already expired 
           if (!dungeon.isJoinable()) { Format.sendDungeonMessage(message, 'expireerror'); return; }
-          if (user.partyid == -1) {
+          if (user.data.partyid == -1) {
             // The player is already in the dungeon
             if (dungeon.inParty(user.id)) { Format.sendDungeonMessage(message, 'inerror'); return; }
             // The maximum number of parties has already been reached 
@@ -39,7 +39,7 @@ module.exports = {
             }
             Format.sendDungeonMessage(message, 'joinsuccess', [dungeon, user]);
           } else {
-            let party = Party.parties.get(user.partyid);
+            let party = Party.parties.get(user.data.partyid);
             for (let id of Object.keys(party.members)) {
               if (dungeon.inParty(id)) { Format.sendDungeonMessage(message, 'someoneinerror'); return; }
             }

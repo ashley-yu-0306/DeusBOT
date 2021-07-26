@@ -16,8 +16,8 @@ class Party {
     }
     this.leader_id = leader.id;
     this.members = {};
-    leader.partyid = this.party_id;
-    invitee.partyid = this.party_id;
+    leader.data.partyid = this.party_id;
+    invitee.data.partyid = this.party_id;
     let leader_obj = { tag: leader_dp.tag, usergp: leader, userdp: leader_dp };
     let invitee_obj = { tag: invitee_dp.tag, usergp: invitee, userdp: invitee_dp };
     this.members[this.leader_id] = leader_obj;
@@ -26,7 +26,7 @@ class Party {
   }
 
   static updateUserGP(user) {
-    let party = Party.parties.get(user.partyid);
+    let party = Party.parties.get(user.data.partyid);
     party[user.id] = user;
   }
 

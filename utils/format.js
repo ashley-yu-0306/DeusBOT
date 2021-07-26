@@ -9,6 +9,8 @@ const rolesUTIL = require('./roles.js');
 const Trading = require('../classes/trading.js');
 const Party = require('../classes/party.js');
 const loot = require('../data/loot.js');
+const events = require('../data/events.js');
+const Achievement = require('../classes/achievements.js');
 const { MessageActionRow, MessageButton } = require('discord-buttons');
 
 /**
@@ -273,6 +275,12 @@ class Format {
     var string;
     var usermsg = messages.usermessage;
     switch (type) {
+      case '':
+        string = args[0]; break;
+      case 'nosuchachievement':
+        string = usermsg.nosuchachievement; break;
+      case 'enterachnumber':
+        string = usermsg.enterachnumber; break;
       case 'finderror':
         string = usermsg.finderror; break;
       case 'notinparty':
@@ -357,16 +365,91 @@ class Format {
     message.channel.send(string);
   }
 
+  static formatAchievements(message, args, user) {
+    let contents = []
+    let embed = Format.makeEmbed().setThumbnail(message.author.avatarURL());
+    let user_prog = user.data.achievement_prog;
+    if (args.length != 0) {
+      let event_name = events.achievements[parseInt(args[0]) - 1];
+      if (event_name == undefined) { Format.sendUserMessage(message, 'nosuchachievement'); return; }
+      let event = events.events[event_name];
+      let prog = user_prog[event.achievement.id];
+      if (prog == undefined) prog = 0;
+      embed.setTitle(event.achievement.name);
+      contents.push("**Description**: " + event.description);
+      let str = "**Tier Goals**:　[";
+      let required;
+      for (let i = 0; i < event.achievement.ths.length; i++) {
+        let val = event.achievement.ths[i];
+        str += (i < prog ? "**" : "") + " " + val + " " + (i < prog ? "**" : "");
+        if (required == undefined && val > prog) required = val;
+        if (i != event.achievement.ths.length - 1) str += "/";
+        else if (required == undefined) required = val;
+      }
+      str += "]";
+      contents.push(str);
+      contents.push("**Tier Progress**:　" + prog + "/" + required);
+
+      contents.push(" ");
+      if (event.types != undefined) {
+        contents.push("**" + event.achievement.type_description + "**");
+        let user_event = user.data.event_data[event_name];
+        for (let i = 0; i < event.types.length; i++) {
+          let str = "　(";
+          let mask = 1 << i;
+          let type = Format.capitalizeFirsts(event.types[i]);
+          let goal = event.achievement.type_ths[i];
+          if (user_event != undefined && user_event.types_bits & mask) str += goal + "/" + goal + ")";
+          else str += 0 + "/" + goal + ")";
+          str += " " + type;
+          contents.push(str);
+        }
+        contents.push(" ");
+        for (let key of Object.keys(event.achievement.tier_rewards)) {
+          let id = event.achievement.tier_rewards[key];
+          let str = "Tier " + key + " reward: ";
+          if (event.achievement.reward_type == 'title') {
+            str += "Title ";
+            if (isNaN(id)) {
+              str += "(varies)";
+              contents.push(str);
+              break;
+            }
+            str += "[" + DB.titles[id].title + "]"
+          }
+          contents.push(str);
+        }
+      }
+
+    } else {
+      embed.setTitle("Achievements");
+      for (let key of Object.keys(events.events)) {
+        let event = events.events[key];
+        if (event.achievement != undefined) {
+          console.log(user_prog)
+          let id = event.achievement.id + 1;
+          let header = '`' + id + '`　**' +
+            event.achievement.name + "** `(" + (user_prog[id-1] == undefined ? 0 : user_prog[id-1]) + "/" + event.achievement.tiers + ")`";
+          contents.push(header);
+        }
+      }
+    }
+    embed.setDescription(contents);
+    message.channel.send(embed);
+  }
+
   static formatPartyJoin = function (message, _, args) {
     message.channel.send(args[0].tag + " has successfully joined " + args[1].tag + "'s party.");
     let partyid = args[2], party;
     if (partyid == -1) {
       party = new Party(args[3], args[4], args[1], args[0]);
       Party.parties.set(party.party_id, party);
-      updateUTIL.updateUser(args[3].id, args[3].lastmsg, args[3].busy, party.party_id, args[3].inventory,
+      args[3].data.partyid = party.party_id;
+      updateUTIL.updateUser(args[3].id, args[3].lastmsg, arags[3].data, args[3].inventory,
         args[3].equipped, args[3].profile, args[3].profile.hp);
     } else { party = Party.parties.get(partyid); party.joinParty(args[4], args[0]); }
-    updateUTIL.updateUser(args[4].id, args[4].lastmsg, args[4].busy, party.party_id, args[4].inventory,
+    args[4].data.partyid = party.party_id;
+    updateUTIL.updateUser(args[4].id, args[4].lastmsg, args[4].data, args[4].inventory,
       args[4].equipped, args[4].profile, args[4].profile.hp);
   }
 
@@ -490,7 +573,7 @@ class Format {
     const armor = "Defense: " + user.profile.armor;
     const dungeons = "Dungeons Conquered: " + user.profile.dungeons_completed;
     const raids = "Raids Conquered: " + user.profile.raids_completed;
-    const achieve = "Achievements Completed: " + user.profile.achievements;
+    const achieve = "Achievements Completed: " + user.profile.achievement_count;
     const date = "Adventurer Since: " + user.profile.date_joined;
     const empty = "------------------";
     const equipped = user.equipped.armor;
@@ -507,7 +590,9 @@ class Format {
       Format.exceedLength(Format.capitalizeFirsts(equipped.feet.name), 18));
     const pring = "[  Ring  ] " + (equipped.ring == null ? empty :
       Format.exceedLength(Format.capitalizeFirsts(equipped.ring.name), 18));
-
+    console.log(achieve)
+    console.log(achieve.length)
+    console.log(column)
     contents.push(plevel + " ".repeat(column - plevel.length) + pweapon);
     contents.push(pnick);
     contents.push(pclass + " ".repeat(column - pclass.length) + phead);
@@ -542,7 +627,7 @@ class Format {
   static formatPurchaseReply = function (message, _, args) {
     let user = args[0], item = args[1];
     userUTIL.updateItem(item, user.inventory);
-    updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, user.profile.hp);
+    updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, user.profile.hp);
     Format.sendUserMessage(message, 'buysuccess');
   }
 
@@ -596,10 +681,10 @@ class Format {
     let trade = new Trading(message.author.id, message.author.tag, args[1], args[0]);
     let trade_id = message.author.id + "_" + args[1];
     Trading.trades.set(trade_id, trade);
-    args[2].busy = "trade " + trade_id;
-    args[3].busy = "trade " + trade_id;
-    updateUTIL.updateUser(args[2].id, args[2].lastmsg, args[2].busy, args[2].partyid, args[2].inventory, args[2].equipped, args[2].profile, args[2].profile.hp);
-    updateUTIL.updateUser(args[3].id, args[3].lastmsg, args[3].busy, args[3].partyid, args[3].inventory, args[3].equipped, args[3].profile, args[3].profile.hp);
+    args[2].data.busy = "trade " + trade_id;
+    args[3].data.busy = "trade " + trade_id;
+    updateUTIL.updateUser(args[2].id, args[2].lastmsg, args[2].data, args[2].inventory, args[2].equipped, args[2].profile, args[2].profile.hp);
+    updateUTIL.updateUser(args[3].id, args[3].lastmsg, args[3].data, args[3].inventory, args[3].equipped, args[3].profile, args[3].profile.hp);
     let embed = Format.formatTradeEmbed(trade);
     message.channel.send(embed).then(function (bot_msg) {
       trade.setMsg(bot_msg);
@@ -660,6 +745,7 @@ class Format {
         errors: ['time']
       })
         .then(async (collected) => {
+          console.log(user.profile)
           let keys = Array.from(collected.keys());
           let button = collected.get(keys[0]);
           const job = button.id.slice((message.author.id + "jobadvance").length).trim();
@@ -669,8 +755,11 @@ class Format {
           basic.name = DB.a_desc[basic_id].name;
           user.profile.job = job;
           user.equipped.abilities.push(basic);
-          updateUTIL.updateUser(user.id, user.lastmsg, user.busy, user.partyid, user.inventory, user.equipped, user.profile, undefined);
           button.reply.defer();
+          updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, undefined).then(function () {
+            Achievement.triggerEvent(message, user, 'advance', job.toLowerCase(), 1);
+
+          });
         })
         .catch(collected => {
           console.log("Error: " + collected);
@@ -701,6 +790,17 @@ class Format {
       embed.addField('Party ' + (i + 1) + (list.locked ? " [Locked]" : ""), value, true);
     }
     return embed;
+  }
+
+  static formatTitles = function (message, args, titles) {
+    let contents = [];
+    let count = 1;
+    for (let title of titles) {
+      contents.push("`" + count + "`　" + title);
+      count++;
+    }
+    if (count == 1) contents.push("No titles found. Try completing some achievements!");
+    message.channel.send(Format.makeEmbed().setDescription(contents).setTitle("Titles").setThumbnail(message.author.avatarURL()));
   }
 
   static formatDungeonResults = function (floor, channel) {
@@ -880,8 +980,8 @@ class Format {
               for (let i = 0; i < dungeon.partyList.length; i++) {
                 dungeon.beginDungeon(i);
                 for (let user of dungeon.partyList[i].members) {
-                  user.usergp.busy = 'dungeon';
-                  updateUTIL.updateUser(user.usergp.id, user.usergp.lastmsg, user.usergp.busy, user.usergp.partyid,
+                  user.usergp.data.busy = 'dungeon';
+                  updateUTIL.updateUser(user.usergp.id, user.usergp.lastmsg, user.usergp.data,
                     user.usergp.inventory, user.usergp.equipped, user.usergp.profile,
                     user.usergp.profile.hp);
                 }
@@ -940,6 +1040,13 @@ class Format {
           let keys = Array.from(collected.keys());
           let button = collected.get(keys[0]);
           const job = button.id.slice((message.author.id + "jobstart").length).trim();
+          const data = {
+            partyid: -1,
+            busy: '',
+            event_data: {},
+            achievement_prog: [],
+            titles: [], // Unlocked titles
+          };
           const profile = {
             level: 1,
             exp: 0,
@@ -952,7 +1059,7 @@ class Format {
             armor: undefined,
             nickname: "",
             title: "",
-            achievements: 0,
+            achievement_count: 0,
             dungeons_completed: 0,
             raids_completed: 0,
             date_joined: message.createdAt.toString().substring(4, 15)
@@ -961,7 +1068,7 @@ class Format {
           var basic = DB.a_meta[basic_id];
           basic.name = DB.a_desc[basic_id].name;
           var equipped = { armor: { head: null, body: null, legs: null, feet: null, ring: null, weapon: null }, weapon: '', abilities: [basic], consumables: [] };
-          updateUTIL.updateUser(message.author.id, 0, "", -1, {}, equipped, profile, undefined);
+          updateUTIL.updateUser(message.author.id, 0, data, {}, equipped, profile, undefined);
           message.channel.send(messages.startembed.welcome);
           const usermsg = messages.usermessage;
           message.author.send(usermsg.deusintroduction1 + usermsg.deusintroduction2 + usermsg.deusintroduction3 +

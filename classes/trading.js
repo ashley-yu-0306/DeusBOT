@@ -51,9 +51,11 @@ class Trading {
       target = user1_gp;
       curr_trades = this.user2;
     }
-    updateUTIL.updateUser(user1_gp.id, user1_gp.lastmsg, '', user1_gp.partyid, user1_gp.inventory,
+    user1_gp.data.busy = '';
+    user2_gp.data.busy = '';
+    updateUTIL.updateUser(user1_gp.id, user1_gp.lastmsg, user1_gp.data, user1_gp.inventory,
       user1_gp.equipped, user1_gp.profile, user1_gp.profile.hp);
-    updateUTIL.updateUser(user2_gp.id, user2_gp.lastmsg, '', user2_gp.partyid, user2_gp.inventory,
+    updateUTIL.updateUser(user2_gp.id, user2_gp.lastmsg, user2_gp.data, user2_gp.inventory,
       user2_gp.equipped, user2_gp.profile, user2_gp.profile.hp);
   }
 
