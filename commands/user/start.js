@@ -1,3 +1,4 @@
+const gen_errors = require('../../data/messages.js').gen_errors;
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
 
@@ -7,8 +8,7 @@ module.exports = {
   description: 'Start your journey as an adventurer!',
   execute(message, args) {
     userUTIL.userData(message, userUTIL.eREQUESTS.NONREQUIRE).then(function (user) {
-      if (user != null) { Format.sendUserMessage(message, 'haserror'); return; }
-      console.log("Successfully beginning character creation.");
+      if (user != null) { Format.sendMessage(message, gen_errors.self_has_acc); return; }
       Format.formatStart(message);
     });
   }

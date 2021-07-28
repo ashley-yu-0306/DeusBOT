@@ -77,7 +77,6 @@ const parseCSV = function (path, method, dataset, key_is_name = false, is_array 
       for (let i = 0; i < results.length; i++) {
         method(results[i], dataset, key_is_name, is_array);
       }
-      console.log(titles)
       exports.titles = titles;
       exports.p_pclasses = p_pclasses;
       exports.p_aclasses = p_aclasses;

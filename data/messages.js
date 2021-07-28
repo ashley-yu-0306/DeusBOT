@@ -1,17 +1,39 @@
 require('dotenv').config();
 const prefix = process.env.PREFIX;
-
-exports.syntaxmessage = {
-  syntax: 'Syntax: ',
-  setchannel: prefix + 'setchannel `number` `channel`'
-}
+const divider = '======================================================\n'
 
 exports.merchant = {
-  bio: `*"Well, well... I'm sure I have some wares for the likes of you. Why don't you browse around, hmm?"*\n`,
+  bio: `The old merchant: "*Well, well... I'm sure I have some wares for the likes of you. Why don't you browse around, hmm?*"\n`,
   bio_helper: 'Select a category to proceed.',
   purchase_helper: 'To purchase an item, use `' + prefix + 'buy <quantity> <item name>`. ',
   Consumables: `*"Alright I've got most of the consumables you can find right here in my store, alright? Don't be so picky now, I'm sure some of these will suit your needs!"*`,
-  Consumables_helper: "To equip a consumable, use `" + prefix + "equip <slot #> <item name>`. To use an equipped consumable, use `" + prefix + "use <slot #>`."
+  Consumables_helper: "To equip a consumable, use `" + prefix + "equip <slot #> <item name>`. To use an equipped consumable, use `" + prefix + "use <slot #>`.",
+  item_not_sold: [
+    `The old merchant: "*I'm but a frail, old woman. Now how would you expect me to get my hands on that?! Pick something else, now!*"`,
+    `The old merchant: "*There is not a single merchant in the Great Plains who would get you that! Pick something else, now!*"`,
+    `The old merchant: "*By the Gods you are quite the demanding traveler! Pick something that I have in stock, would ya?!*"`,
+    `The old merchant: "*A what now? Where do you even get something like that! Pick something that I have in stock, would ya?!*"`,
+    `The old merchant: "*Look at the shelves! What I've got is what you can get! Pick something that I have in stock, would ya?!*"`,
+    `The old merchant: "*Oh dear, travelers nowdays are getting too creative! Back in the day it was just a couple of pots here, a couple of pots there... Pick something that I have in stock, would ya?!*"`,
+    `The old merchant: "*What did you just ask for? Listen, I'm sorry honey, I'm a little busy right now. Pick something that I have on the shelves, alright?*"`
+  ],
+  purchase_initiate: 'You are about to purchase [{0}x {1}] for {2} gold. Your remaining balance will be {3} gold. Proceed?',
+  purchase_success: 'Successfully purchased [{0}x {1}].',
+}
+
+exports.syntax = {
+  set_channel: 'Syntax: `' + prefix + 'setchannel <party #> <channel>` (example: ' + prefix + 'setchannel 3 #dungeon-3)',
+  buy: 'Syntax: `' + prefix + 'buy <optional: item quantity> <item name>` (example: ' + prefix + 'buy 2 small health pot)',
+  achievements: 'Syntax: `' + prefix + 'achievements <optional: achievement #>` (example: ' + prefix + 'achievements 2)',
+  equip: 'Syntax: `' + prefix + 'equip <set name> <piece name>` (example: ' + prefix + 'equip wooden pants)',
+  open: 'Syntax: `' + prefix + 'open <set name>` (example: ' + prefix + 'open broken)',
+  party_invite: 'Syntax: `' + prefix + 'party invite @<user name>` (example: ' + prefix + 'party invite @Deus)',
+  trade_invite: 'Syntax: `' + prefix + 'trade @<user name>` (example: ' + prefix + 'trade @Deus)',
+  unequip: 'Syntax: `' + prefix + 'unequip <slot>` (example: ' + prefix + 'unequip body)',
+  do: 'Syntax: `' + prefix + 'do <ability #> <situational: target #>` (example: ' + prefix + 'do 1 1)',
+  undo: 'Syntax: `' + prefix + 'undo <action in action queue>` (example: ' + prefix + 'undo do 1 1)',
+  use: 'Syntax: `' + prefix + 'use <item #> <situational: target #>` (example: ' + prefix + 'use 1 1)',
+
 }
 
 exports.partymessage = {
@@ -31,70 +53,138 @@ exports.partymessage = {
   selfleader: 'You have been appointed as party leader.'
 }
 
-exports.servermessage = {
-  NaN: ' is not a number. Please enter a number from 1 to 6.',
-  OOB: ' is not a valid number. Please enter a number from 1 to 6.',
-  nochannel: 'That is not a valid channel. Please try again and mention a channel using `#<channel name>`, without the < and >.',
-  invalidchannel1: ' is a ',
-  invalidchannel2: ' channel. Please try again with a text channel.',
-  setsuccess1: 'Successfully set ',
-  setsuccess2: ' as the channel for party ',
-  setsuccess3: ". The channel's permissions have been modified to only allow party members to send messages within the channel.",
-  prevmissing: 'Please set the channels for the following parties before proceeding: ',
-  dupwarning1: ' is already being used as the dungeon channel for party ',
-  dupwarning2: '. As it is not recommended to use one channel for more than one party due to the clutter and confusion, you must manually turn this option on in `' + prefix + 'sconfig`.'
+exports.party = {
+  not_leader: 'Only the party leader can execute this command.',
+  invite_initiation: '{0}, {1} has invited you to their party. Accept?',
+  not_in_party: 'You are not in a party. Please try again after joining or creating a party.',
+  lock: 'The party is now locked.',
+  unlock: 'The party is now unlocked.',
+  target_not_in_party: '{0} is not in your party. Please invite them to your party or try again with another party member.',
+  appoint_success: '{0} has successfully appointed {1} as party leader.',
+  kick_leader: 'The leader of the party cannot be kicked. Please try again with another member.',
+  kick_success: '{0} has been successfully kicked from the party.',
+  party_leave: '{0} has left the party.',
+  party_disband_notif: 'The party you are in has been disbanded.',
+  party_disband: 'You have successfully disbanded the party.',
+  reassign_other_success: '{0} has been promoted to party leader.',
+  reassign_self_success: 'You have been promoted to party leader.'
 }
 
-exports.usermessage = {
-  finderror: 'You do not have a character yet! To start your journey, enter \`' + prefix + 'start\`.',
-  finderrorother: 'That user does not have a character yet.',
-  haserror: `You already have a character! For more guidance, enter \`${prefix}help\`.`,
+exports.open = {
+  no_such_set: "There is no set with the name '{0}'. Please try again with the" +
+    " name of a valid set.",
+  missing_coffer: "You do not have a coffer with the name {0} in your inventory. " +
+    "Please try again with a coffer you possess.",
+  obtained: "{0} has obtained [{1}x {2}] and [{3}x {4}]."
+}
+
+exports.set_channel = {
+  NaN: "'{0}' is not a number. Please try again with a number between 1 to 6.",
+  OOB: "'{0}' is not a valid number. Please try again with a number between 1 to 6.",
+  no_such_channel: '{0} is not a valid text channel. Please try again with a valid text channel.',
+  invalid_channel_type: '{0} is a {1} channel. Please try again with a text channel.',
+  set_success: "Successfully set {0} as the channel for party {1}. The channel's " +
+    "permissions have been modified to only allow party members to send messages " +
+    "within the channel.",
+  prev_unset: 'Please set the channels for preceding parties before proceeding. Refer to ' +
+    '`' + prefix + 'sconfig` for more details.',
+  dup_warning: '{0} is already being used as the dungeon channel for party {1}. ' +
+    'To allow multiple parties to operate in the same channel, turn on the option' +
+    ' in `' + prefix + 'sconfig`.',
+}
+
+exports.nickname = {
+  nick_long: "Your nickname must be 15 characters or less.",
+  nick_short: "Your nickname must be at least 3 characters.",
+  nick_chars: "Your nickname can only contain letters or digits.",
+  nick_remove: "Successfully removed nickname.",
+  nick_success: "Successfully changed your nickname to {0}."
+}
+
+exports.equip = {
+  no_such_set: "There is no set with the name '{0}'. Please try again with the name of a valid set.",
+  equip_coffer: "You cannot equip a coffer. Please try again with a piece of equipment.",
+  wrong_class: "You do not possess '{0}' that is equippable by your class. " +
+    "Please try again after obtaining such an equipment.",
+  equip_success: "Successfully equipped [{0}] into slot '{1}'.",
+  replace_success: "Successfully replaced [{2}] with [{0}] in slot '{1}'.",
+  invalid_slot: "{0} is not a valid slot. Please try again with one of your equipment slots.",
+  unequip_success: "Successfully unequipped [{0}] from slot {1}.",
+  none_equipped: "You do not have anything equipped in slot {0}."
+}
+
+exports.achievements = {
+  NaN: "'{0}' is not a number. Please try again with a number.",
+  no_such_ach: "There is no achievement with ID '{0}'. Please try again with another ID."
+}
+
+
+exports.dungeon = {
+  inactive_dungeon: "There is no active dungeon in your server. Please try again after a dungeon spawns.",
+  not_in_party: "You are not in a dungeon party. Please try again after joining a dungeon.",
+  in_party: "You are already in a dungeon party. Please leave your current party or wait for the dungeon to begin.",
+  not_dungeon_channel: "You are not in your dungeon channel. Please try again -------.",
+  no_such_monster: "There is no monster with ID {0}. Please try again with a valid ID number.",
+  dead_monster: "The monster with ID {0} is already dead. Please try again with another ID number.",
+  already_done: "You have already confirmed your actions for your turn. Please try again next turn.",
+  no_such_ability: "You do not have an ability with ID {0}. Please try again with a valid ID number.",
+  no_such_item: "You do not have an item at index {0} in your item pouch. Please try again with a valid ID number.",
+  no_target: "You must specify a target for this action. Please try again with an ID number.",
+  insuff_AP: "You do not have enough AP to do that. Please undo a previous action or end your turn with `" + prefix + "done`.",
+  insuff_items: "You do not have enough of that item to do that. Please try another action or end your turn with `" + prefix + "done`.",
+  action_added: "Successfully added action to action queue. You have {0} AP remaining.",
+  turn_confirmed_notdone: "Successfully completed your turn. Now awaiting {0}.",
+  turn_confirmed_done: "Successfully completed your turn. All users have now completed their turn.",
+  expired: "This dungeon has already expired. Please try again after a new dungeon spawns.",
+  no_slots: "There are no more slots available in this dungeon. Please try again after a new dungeon spawns.",
+  join_notif: "{0} (Lv. {1}) has joined the party. There are now {2} slots open. The dungeon will begain in {3} seconds.",
+  party_join_notif: "A pre-made party of {0} members has joined the party. There are now {1} slots open. The dungeon will begin in {2} seconds.",
+  join_success: "You have successfully joined party {0} with {1} other users. You will be notified if any other users join the party. The dungeon will begin in {2} seconds.",
+  ul_party_join_success: "Your party has successfully joined party {0} with {1} other users. You will be notified if any other users join the party. The dungeon will begin in {2} seconds.",
+  l_party_join_success: "Your party has successfully joined party {0}. The dungeon will begin in {1} seconds.",
+  other_in_party: "Member {0} of your party is already in this dungeon. Please try again after they have left the dungeon party or after they have left your party.",
+  action_queue_empty: "Your action queue is already empty.",
+  no_such_action: "The action '{0}' is not in your action queue. Please try again with an action in your action queue.",
+  undo_use_success: "Successfully removed action `{0}` from your action queue. You now have {1} {2} and {3} AP remaining.",
+  undo_do_success: "Successfully removed action `{0}` from your action queue. You now have {1} AP remaining.",
+
+  warning: divider + '{0}```This dungeon will automatically begin in 15 seconds. Make any last minute preparations while you can! Please adjust your window size so that the ==== dividers do not break into the next line for the best experience.```' + divider,
+  soon_start: 'This dungeon will begin in 5 seconds.'
+}
+
+exports.trade = {
+  mention_user: 'To begin trading, mention another user.',
+  trade_initiation: '{0}, {1} has invited you to a trade. Proceed?',
+  not_in_trade: 'You are not currently in a trade. Please try again after initiating a trade.',
+  insuff_gold: 'You do not have enough gold to do that.',
+  no_item: "You do not have the item '{0}' in your inventory.",
+  trade_complete: "The trade has been completed. All items and gold have been deposited in your inventories."
+}
+
+exports.gen_messages = {
+  advance_success: "Alas, adventurer. You continue to impress me. Please refer to \`" + prefix + "help\` for more information about your new class.",
+}
+
+exports.gen_errors = {
+  self_no_acc: 'You do not have a character yet! To start your journey, enter \`' + prefix + 'start\`.',
+  other_no_acc: '{0} does not have a character yet.',
+  self_busy_dungeon: 'You cannot execute this command while in a dungeon. Please complete the dungeon before trying again.',
+  other_busy_dungeon: '{0} is in a dungeon. Please try again after they have completed the dungeon.',
+  req_level: 'You must be level {0} to do that. Please try again after reaching level {0}.',
+  has_advanced: 'You have already advanced your class.',
+  no_such_item: 'There is no item with the name {0}.',
+  insuff_gold: 'You need {0} gold to do that. Please try again after obtaining more gold.',
+  confirmation_cancel: 'The operation has been canceled.',
+  target_self: 'You cannot target yourself with that command.',
+  no_such_user: 'There is no user with ID {0} in your server. Please try again with a valid user.',
+  self_has_acc: 'You already have a character! For more guidance, enter `' + prefix + 'help`.',
+  missing_args: "Missing arguments. Please try again with the missing arguments.",
+
   deusintroduction1: 'Welcome, adventurer! I will occassionaally send messages to notify you of information related to your journey in this direct message channel. This includes the following:',
   deusintroduction2: '\n\t\t\t\t• Party-related notifications\n\t\t\t\t• ...and more!\n',
   deusintroduction3: 'Feel free to configure these notifications to your liking with \`' + prefix + 'config\`. ',
   deusintroduction4: 'If you need help getting started, please refer to \`' + prefix + 'help\` for some short tutorials! ',
   deusintroduction5: 'With that being said, good luck on your adventures!',
-  equipsuccess1: 'Successfully equipped ',
-  equipsuccess2: ' in slot ',
-  replacesuccess1: 'Successly replaced ',
-  replacesuccess2: ' with ',
-  replacesuccess3: ' in slot ',
-  itemnotpresent: 'This item is not in your inventory.',
-  NEargs: 'Please enter at least two arguments in this syntax: \`' + prefix + ' <set name> <category>\`',
-  nosuchset: 'This set does not exist.',
-  nonequippable: 'You do not have equippable equipment of that name. Please ensure that you are of the correct class to equip the specified equipment.',
-  insufflevel: 'You are not of a sufficient level to equip this item.',
-  equipcoffer: 'You cannot equip a coffer.',
-  nosuchcoffer: 'You do not have this coffer in your inventory.',
-  nicklengthlong: 'Your nickname must be 15 characters or less.',
-  nicklengthshort: 'Your nickname must be at least 3 characters.',
-  charsonly: 'Your nickname may only contain either letters (A-Z, a-z) or numbers (0-9).',
-  nicksuccess: 'Successfully changed nickname to ',
-  nickremove: 'Successfully removed nickname.',
-  nosuchitem: 'There is no item with the name ',
-  notenoughgold1: 'You do not have enough gold (',
-  notenoughgold2: ') to purchase [',
-  notenoughgold3: 'x] ',
-  buysuccess: 'Purchase successful.',
-  cancel: 'Operation successfully canceled.',
-  invalidslot: 'This is not a valid equipment slot.',
-  nonequipped: 'Nothing is equipped in that equipment slot.',
-  unequipsuccess1: 'Successfully unequiped ',
-  unequipsuccess2: ' from slot ',
-  mentionuser: 'Please mention a user using @<user name>.',
-  busydungeon: 'This command cannot be used while in a dungeon. Please try again after completing the dungeon.',
-  targetbusydungeon: 'This command cannot be used while the target user is in a dungeon. Please try again after they have completed the dungeon.',
-  tradeself: 'You cannot initiate a trade with yourself.',
-  notintrade: 'You cannot use trade commands unless you are in a trade.',
-  notenoughgoldtrade: 'You do not have enough gold to do that.',
-  canttradenoitem: 'You do not have such an item in your inventory.',
-  notenoughitems: 'You do not have enough of that item to do that.',
-  tradecomplete: 'The trade has completed.',
-  notinparty: 'You are not in a party.',
-  inviteself: 'You cannot invite yourself to a party.',
-  someoneinerror: 'Someone in your party is already in a dungeon.',
-  enterachnumber: 'Please enter the number of the achievement that you would like additional details for.',
-  nosuchachievement: 'There is no achievement with that ID number. Please try again with another ID number.'
 
 }
 
@@ -104,73 +194,14 @@ exports.inventoryembed = {
   displayfilter: 'Displaying all items in your inventory of category '
 }
 
-exports.dungeonmessage = {
-  noneerror: 'There is no active dungeon to join! Please try again when a dungeon appears.',
-  doneerror: 'There is no active dungeon in your server! Please try again after joining a dungeon.',
-  nopartyerror: "You are not in a party! Please try again after joining a party the next time a dungeon appears.",
-  expireerror: 'The dungeon has already expired. Please try again when a dungeon appears.',
-  channelerror1: "Please send dungeon-related commands in your party's channel (<#",
-  channelerror2: ">) to avoid confusion.",
-  inerror: 'You have already joined the dungeon!',
-  joinsuccess1: 'You have successfully joined the dungeon! You are in party ',
-  joinsuccess2: ' with ',
-  joinsuccess3single: ' other user. You will be notified if others join the party.',
-  joinsuccess3plural: ' other users. You will be notified if others join the party.',
-  joinnotif1: ' has joined the party! ',
-  joinnotifopensingle: 'There is 1 open position left',
-  joinnotifopen1plural: 'There are ',
-  joinnotifopen2plural: ' open positions left.',
-  joinnotiffull: 'The party is now full. ',
-  partyjoinsuccess1: 'Your party has successfully joined the dungeon! Your party is in party ',
-  partyjoinsuccessul1: ' with ',
-  partyjoinsuccessul2: ' other users. You will be notified if others join the party.',
-  partyjoinsuccessl1: '. As your party is locked, no additional members be able to join your room. To unlock your party, enter `' + prefix + "p unlock`.",
-  diddone1: 'Action queue confirmed: [',
-  diddone2: ']. ',
-  diddonewait: 'Now waiting for: ',
-  maxreached: 'Unfortunately, all parties in the dungeon are already full. ',
-  notmaxcapacity1: 'Each server can have a maximum of 6 parties but your server currently allows ',
-  notmaxcapacity2: " parties. Reach out to your server's admins to increase the cap for future dungeons.",
-  divider: '======================================================\n',
-  autostart: "```This dungeon will automatically begin in 15 seconds. Make any last minute preparations while you can! Please adjust your window size so that the ==== dividers do not break into the next line for the best experience.```",
-  soonstart: "This dungeon will begin in 5 seconds.",
-  itemindexerror: 'You do not have an item in that index of your item pouch.',
-  abilindexerror: 'You do not have an ability of that index.',
-  insuffap: 'You do not have enough AP to do that! Please try another action or finish your turn with \`' + prefix + 'done\`.',
-  didaction1: 'Added action to action queue: [',
-  didaction2: ']. You have ',
-  didability3: ' AP remaining.',
-  didaction3: ' AP and ',
-  didaction4: ' remaining.',
-  insuffitem: 'You do not have any more of this item!',
-  emptyactionqueue: 'There are no actions to remove.',
-  nosuchaction1: 'The specified action is not present in your action queue: [',
-  nosuchaction2: '].',
-  undosuccess1: "Successfully removed '",
-  undosuccess2: "' from your action queue: [",
-  undosuccess3: "]. You have ",
-  undosuccess4: ' AP and ',
-  undosuccess5: ' remaining.',
-  targetnumber: 'This ability requires a target number.',
-  invmonsternumber: 'There is no monster with that ID number.',
-  deadmonster: 'The monster with that ID number is already dead. Please target another monster.',
-  turncomplete: 'You have already completed your turn. Please wait until the next turn before trying again.'
-}
-
 exports.tradeembed = {
   bio: 'Please refer to `' + prefix + 'help trade` for trading commands. The trade will end' +
     ' once both users confirm their trade or the trade times out.'
 }
 
-exports.advancemessage = {
-  insufflevel: "You must be at least level 10 to advance your class. For tips on how to level up, refer to the help menu at \`" + prefix + "help\`.",
-  success: "Alas, adventurer. You continue to impress me. Please refer to \`$" + prefix + "help\` for more information about your new class.",
-  invalid: " is not a valid class. Please try again."
-}
-
-exports.advanceembed = {
+exports.advance_embed = {
   title: 'Narrow down on your specialty and become even stronger!',
-  proceed: "To proceed, choose the class you would like to using the buttons below."
+  bio: "To proceed, choose the class you would like to using the buttons below."
 }
 
 exports.levelembed = {
@@ -192,7 +223,7 @@ exports.dungeondisplaynames = new Map([
 ]);
 
 exports.dungeonembed = {
-  title: 'A wild dungeon has appeared!',
+  title: 'The search party has discovered a dungeon!',
   intro: `To join, enter \`${prefix}join\` before the timer ends. If no parties are formed before then, the dungeon will expire. For more information, please explore \`${prefix}help\`.`,
   type: '**Type**: ',
   difficulty: '**Difficulty**:    ',
@@ -215,6 +246,3 @@ exports.startembed = {
   invalidclass: " is not a valid class. Please try again."
 }
 
-exports.general = {
-  sessionexpired: 'The session has expired.'
-}

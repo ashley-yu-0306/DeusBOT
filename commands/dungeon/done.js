@@ -3,6 +3,9 @@ const serverUTIL = require('../../utils/server.js');
 const formatUTIL = require('../../utils/format.js');
 const Dungeon = require('../../classes/dungeon.js');
 const CombatController = require('../../classes/combatController.js');
+const gen_errors = require('../../data/messages.js').gen_errors;
+const messages = require('../../data/messages.js').dungeon;
+const Assertion = require('../../utils/assertion.js');
 
 module.exports = {
   name: 'done',
@@ -10,34 +13,26 @@ module.exports = {
   description: 'Finish turn in dungeon!',
   execute(message, args) {
     serverUTIL.serverData(message).then(function (server) {
-      if (server.activedungeon == null) { formatUTIL.sendDungeonMessage(message, 'doneerror'); return; }
+      if (!Assertion.assertDungeonCommand(message, undefined, server)) return;
       userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
-        if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
+        if (!Assertion.assertDungeonCommand(message, user, server)) return;
         var dungeon = Dungeon.getDungeon(server.activedungeon);
-        // User is not in any party
         const party_index = dungeon.getPartyNumber(user.id) - 1;
-        if (party_index == -1) { formatUTIL.sendDungeonMessage(message, 'nopartyerror'); return; }
-        // Message not in dungeon channel
-        const channel = server.pchannels[party_index];
-        if (channel != message.channel.id) { formatUTIL.sendDungeonMessage(message, 'channelerror', channel); return; }
-        console.log("party members" )
-        console.log(dungeon.partyList[party_index].members)
         const mem_index = dungeon.getPartyMemberIndex(user.id);
-        console.log("member index " + mem_index)
-        var pprofile = dungeon.partyList[party_index].members[mem_index];
-        console.log("personal profile")
-        console.log(pprofile)
-        if (pprofile.combat.done) { formatUTIL.sendDungeonMessage(message, 'turncomplete', channel); return; }
-        pprofile.combat.done = true;
-        var notdone = [];
-        console.log("party index " + party_index)
-        for (let user of dungeon.partyList[party_index].members) {
-          console.log("checking each member....")
-          console.log(user)
-          if (!user.combat.done) notdone.push(user.tag);
+        var profile = dungeon.partyList[party_index].members[mem_index];
+        if (profile.combat.done) { formatUTIL.sendMessage(message, messages.already_done); return; }
+        profile.combat.done = true;
+        var notdone = "";
+        for (let i = 0; i < dungeon.partyList[party_index].members.length; i++) {
+          let user = dungeon.partyList[party_index].members[i];
+          if (!user.combat.done) notdone += user.tag;
+          if (i != dungeon.partyList[party_index].members.length - 1) notdone += ", "
         }
-        formatUTIL.sendDungeonMessage(message, 'diddone', [dungeon.partyList[party_index].members[mem_index].combat.actionqueue, notdone]);
-        if (notdone.length > 0) return;
+        if (notdone.length > 0) {
+          formatUTIL.sendMessage(message, messages.turn_confirmed_notdone.format(notdone));
+          return;
+        }
+        formatUTIL.sendMessage(message, messages.turn_confirmed_done);
         CombatController.resolveCombat(party_index, dungeon.activeFloors[party_index], message.channel, dungeon.partyList[party_index]);
       })
     })

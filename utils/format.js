@@ -13,6 +13,13 @@ const events = require('../data/events.js');
 const Achievement = require('../classes/achievements.js');
 const { MessageActionRow, MessageButton } = require('discord-buttons');
 
+String.prototype.format = function () {
+  var args = arguments;
+  return this.replace(/{(\d+)}/g, function (match, number) {
+    return typeof args[number] != 'undefined' ? args[number] : match;
+  });
+};
+
 /**
  * Formats (if necessary) and sends any messages or message embed for the bot.
  */
@@ -29,17 +36,31 @@ class Format {
     return "<:" + name + ":" + emoji.general[name] + ">";
   }
 
+  static makeActionRow = function (message, descriptor, array, isconfirm = false, target_id = undefined) {
+    let row = new MessageActionRow();
+    let id = (target_id == undefined ? message.author.id : target_id);
+    for (let i = 0; i < array.length; i++) {
+      let button = new MessageButton().setID("" + id + descriptor + array[i]).setLabel(array[i]);
+      if (isconfirm) {
+        if (i == 0) { i++; button.setStyle("green"); }
+        else { button.setStyle("red"); }
+      } else button.setStyle("blurple");
+      row.addComponent(button);
+    }
+    return row;
+  }
+
   /**
-   * Capitalize the first character of every string in [array] and return
-   * the resulting string.
+   * Capitalize the first character of the string [input] and return
+   * the resulting string. This method does not capitalize prepositions 
+   * specified in Format.PREPOSITION.
    * 
-   * @param {*} array   an array of strings to capitalize the first character of
-   * @returns           a string containing all of [array] strings with the first
-   *                    character capitalized
+   * @param {*} input   a string
+   * @returns           a string with the first letter of every word capitalized
    */
-  static capitalizeFirsts = function (array) {
+  static capitalizeFirsts = function (input) {
     var string = "";
-    const args = array.split(/ +/);
+    const args = input.split(/ +/);
     for (let arg of args) {
       if (!this.PREPOSITION.includes(arg)) string = string + arg.charAt(0).toUpperCase() + arg.slice(1) + " ";
       else string = string + arg + " ";
@@ -47,331 +68,19 @@ class Format {
     return string.slice(0, string.length - 1);
   }
 
-  static sendSyntaxMessage = function (message, type) {
-    var synmsg = messages.syntaxmessage;
-    var string = synmsg.syntax;
-    switch (type) {
-      case 'setchannel':
-        string += synmsg.setchannel; break;
-    }
-    message.channel.send(string);
+  static sendMessage = function (message, string, syntaxError = '', user = undefined) {
+    string += syntaxError == '' ? '' : "\n" + syntaxError;
+    if (user != undefined) user.send(string);
+    else message.channel.send(string);
   }
 
-  static sendServerMessage = function (message, type, args = undefined) {
-    var sermsg = messages.servermessage;
-    var string;
-    switch (type) {
-      case 'NaN':
-        string = sermsg.NaN; break;
-      case 'OOB':
-        string = sermsg.OOB; break;
-      case 'nochannel':
-        string = sermsg.nochannel; break;
-      case 'invalidchannel':
-        string = args.name + sermsg.invalidchannel1 + args.type + sermsg.invalidchannel2; break;
-      case 'prevmissing':
-        string = sermsg.prevmissing;
-        for (let arg of args) {
-          string += arg + ", "
-        }
-        string = string.substring(0, string.length - 2);
-        break;
-      case 'setsuccess':
-        string = sermsg.setsuccess1 + args[0].name + sermsg.setsuccess2 + args[1] + sermsg.setsuccess3; break;
-      case 'dupwarning':
-        string = args[0] + sermsg.dupwarning1 + args[1] + sermsg.dupwarning2; break;
-      default:
-        string = ""; break;
-    }
-    message.channel.send(string);
-  }
-
-  static sendPartyMessage = function (message, type, args = undefined) {
-    console.log("88")
-    var pmsg = messages.partymessage;
-    var string;
-    switch (type) {
-      case 'switchlock':
-        if (args[0]) string = pmsg.lock;
-        else string = pmsg.unlock;
-        break;
-      case 'usernotinparty':
-        string = pmsg.usernotinparty; break;
-      case 'appointsuccess':
-        string = pmsg.appointsuccess1 + args[0] + pmsg.appointsuccess2; break;
-      case 'kicksuccess':
-        string = pmsg.kicksuccess1 + args[0] + pmsg.kicksuccess2; break;
-      case 'kickleader': string = pmsg.kickleader; break;
-      case 'hasleft': string = args[0] + pmsg.hasleft; args[1].send(string); break;
-      case 'disband_channel': string = pmsg.disband; break;
-      case 'disband_dm': string = pmsg.disband; args[0].send(string); break;
-      case 'disband_success': string = pmsg.disband_success; break;
-      case 'leaderonly': string = pmsg.leaderonly; break;
-      case 'newleader': string = args[0] + pmsg.newleader; args[1].send(string); return;
-      case 'selfleader': string = pmsg.selfleader; args[0].send(string); return;
-    }
-    message.channel.send(string);
-  }
-
-  static sendDungeonMessage = function (message, type, args = undefined) {
-    var dunmsg = messages.dungeonmessage;
-    var string;
-    switch (type) {
-      case 'joinerror':
-        string = dunmsg.joinerror; break;
-      case 'doneerror':
-        string = dunmsg.doneerror; break;
-      case 'expireerror':
-        string = dunmsg.expireerror; break;
-      case 'inerror':
-        string = dunmsg.inerror; break;
-      case 'insuffitem':
-        string = dunmsg.insuffitem; break;
-      case 'nopartyerror':
-        string = dunmsg.nopartyerror; break;
-      case 'insuffap':
-        string = dunmsg.insuffap; break;
-      case 'itemindexerror':
-        string = dunmsg.itemindexerror; break;
-      case 'turncomplete':
-        string = dunmsg.turncomplete; break;
-      case 'abilindexerror':
-        string = dunmsg.abilindexerror; break;
-      case 'targetnumber':
-        string = dunmsg.targetnumber; break;
-      case 'invmonsternumber':
-        string = dunmsg.invmonsternumber; break;
-      case 'deadmonster':
-        string = dunmsg.deadmonster; break;
-      case 'nosuchaction':
-        string = dunmsg.nosuchaction1;
-        var actionqueue = args[0];
-        for (let i = 0; i < actionqueue.length; i++) {
-          if (i == actionqueue.length - 1) string += actionqueue[i];
-          else string += actionqueue[i] + ", "
-        }
-        string += dunmsg.nosuchaction2;
-        break;
-      case 'undosuccess':
-        string = dunmsg.undosuccess1 + args[0] + dunmsg.undosuccess2;
-        var actionqueue = args[1];
-        for (let i = 0; i < actionqueue.length; i++) {
-          if (i == actionqueue.length - 1) string += actionqueue[i];
-          else string += actionqueue[i] + ", "
-        }
-        string += dunmsg.undosuccess3 + args[2] + dunmsg.undosuccess4 + args[4] + " " + args[3]
-          + (args[4] > 1 ? "s" : "") + dunmsg.undosuccess5;
-        break;
-      case 'emptyactionqueue':
-        string = dunmsg.emptyactionqueue; break;
-      case 'didaction':
-        var actionqueue = args[0];
-        string = dunmsg.didaction1;
-        for (let i = 0; i < actionqueue.length; i++) {
-          if (i == actionqueue.length - 1) string += actionqueue[i];
-          else string += actionqueue[i] + ", "
-        }
-        string += dunmsg.didaction2 + args[1] + dunmsg.didaction3 + args[2] + " " + args[3] + (args[2] == 1 ? "" : "s") + dunmsg.didaction4;
-        break;
-      case 'didability':
-        var actionqueue = args[0];
-        string = dunmsg.didaction1;
-        for (let i = 0; i < actionqueue.length; i++) {
-          if (i == actionqueue.length - 1) string += actionqueue[i];
-          else string += actionqueue[i] + ", "
-        }
-        string += dunmsg.didaction2 + args[1] + dunmsg.didability3;
-        break;
-      case 'channelerror':
-        string = dunmsg.channelerror1 + args + dunmsg.channelerror2; break;
-      case 'joinsuccess':
-        var dungeon = args[0];
-        var usergp = args[1];
-        var num = dungeon.getPartyMemberCount(usergp.id);
-        string = dunmsg.joinsuccess1 + dungeon.getPartyNumber(usergp.id) + dunmsg.joinsuccess2 + dungeon.getPartyMemberCount(usergp.id);
-        num == 1 ? string += dunmsg.joinsuccess3single : string += dunmsg.joinsuccess3plural;
-        message.author.send(string);
-        return;
-      case 'partyjoinsuccess':
-        var dungeon = args[0], party = args[1];
-
-        return;
-      case 'partyjoinnotif':
-        var party = args[0], userdp = args[1], open = args[2];
-        for (let i = 0; i < Object.keys(party.members).length; i++) {
-          let user = party.members[i];
-          str += (i == Object.keys(party.members).length - 1 ? "and " : "") + user.tag +
-            "(Lv. " + user.usergp.profile.level + ")" + (i == Object.keys(party.members).length - 1 ? " " : ", ");
-        }
-        str += dunmsg.joinnotif1;
-        if (open == 0) { string += dunmsg.joinnotiffull; }
-        else if (open == 1) { string += dunmsg.joinnotifopensingle; }
-        userdp.send(string);
-        return;
-      case 'joinnotif':
-        var usergp = args[0], userdp = args[1], open = args[2];
-        string = message.author.tag + " (Lv. " + usergp.profile.level + ")" + dunmsg.joinnotif1;
-        if (open == 0) { string += dunmsg.joinnotiffull; }
-        else if (open == 1) { string += dunmsg.joinnotifopensingle; }
-        else { string += dunmsg.joinnotifopen1plural + open + dunmsg.joinnotifopen2plural; }
-        userdp.send(string);
-        return;
-      case 'diddone':
-        var actionqueue = args[0], notdone = args[1];
-        string = dunmsg.diddone1;
-        for (let i = 0; i < actionqueue.length; i++) {
-          if (i == actionqueue.length - 1) string += actionqueue[i];
-          else string += actionqueue[i] + ", "
-        }
-        string += dunmsg.diddone2;
-        if (notdone.length > 0) {
-          string += dunmsg.diddonewait;
-          for (let i = 0; i < notdone.length; i++) {
-            if (i == notdone.length - 1) string += notdone[i] + ".";
-            else string += notdone[i] + ", "
-          }
-        }
-        break;
-      case 'maxparties':
-        var userdp = args[0], max = args[1];
-        string = messages.dungeonmessage.maxreached;
-        if (max < 6) string += messages.dungeonmessage.notmaxcapacity1 + max + messages.dungeonmessage.notmaxcapacity2;
-        return;
-      case 'autostart':
-        for (let i = 0; i < args[2]; i++) {
-          string = dunmsg.divider;
-          string += "<@&" + args[1][i].id + ">";
-          string += dunmsg.autostart;
-          string += dunmsg.divider;
-          const channel = message.guild.channels.cache.get(args[0][i]);
-          channel.send(string);
-        }
-        return;
-      case 'soonstart':
-        for (let i = 0; i < args[1]; i++) {
-          string = dunmsg.soonstart;
-          const channel = message.guild.channels.cache.get(args[0][i]);
-          channel.send(string);
-        }
-        return;
-      default:
-        string = ""; break;
-    }
-    message.channel.send(string);
-  }
-
-  static sendAdvanceMessage = function (message, type) {
-    var string;
-    switch (type) {
-      case 'insufflevel':
-        string = messages.advancemessage.insufflevel; break;
-      case 'success':
-        string = messages.advancemessage.success; break;
-    }
-    message.channel.send(string);
-  }
-
-  static sendUserMessage = function (message, type, args = undefined) {
-    var string;
-    var usermsg = messages.usermessage;
-    switch (type) {
-      case '':
-        string = args[0]; break;
-      case 'nosuchachievement':
-        string = usermsg.nosuchachievement; break;
-      case 'enterachnumber':
-        string = usermsg.enterachnumber; break;
-      case 'finderror':
-        string = usermsg.finderror; break;
-      case 'notinparty':
-        string = usermsg.notinparty; break;
-      case 'inviteself':
-        string = usermsg.inviteself; break;
-      case 'someoneinerror':
-        string = usermsg.someoneinerror; break;
-      case 'leaderonlyinvite':
-        string = usermsg.leaderonlyinvite; break;
-      case 'notintrade':
-        string = usermsg.notintrade; break;
-      case 'tradecomplete':
-        string = usermsg.tradecomplete; break;
-      case 'notenoughitems':
-        string = usermsg.notenoughitems; break;
-      case 'notenoughgoldtrade':
-        string = usermsg.notenoughgoldtrade; break;
-      case 'mentionuser':
-        string = usermsg.mentionuser; break;
-      case 'canttradenoitem':
-        string = usermsg.canttradenoitem; break;
-      case 'tradeself':
-        string = usermsg.tradeself; break;
-      case 'busydungeon':
-        string = usermsg.busydungeon; break;
-      case 'targetbusydungeon':
-        string = usermsg.targetbusydungeon; break;
-      case 'nickremove':
-        string = usermsg.nickremove; break;
-      case 'cancel':
-        string = usermsg.cancel; break;
-      case 'haserror':
-        string = usermsg.haserror; break;
-      case 'charsonly':
-        string = usermsg.charsonly; break;
-      case 'buysuccess':
-        string = usermsg.buysuccess; break;
-      case 'nosuchitem':
-        string = usermsg.nosuchitem + args[0] + "."; break;
-      case 'nicksuccess':
-        string = usermsg.nicksuccess + args[0] + "."; break;
-      case 'nicklengthshort':
-        string = usermsg.nicklengthshort; break;
-      case 'nicklengthlong':
-        string = usermsg.nicklengthlong; break;
-      case 'nosuchset':
-        string = usermsg.nosuchset; break;
-      case 'nonequippable':
-        string = usermsg.nonequippable; break;
-      case 'insufflevel':
-        string = usermsg.insufflevel; break;
-      case 'equipcoffer':
-        string = usermsg.equipcoffer; break;
-      case 'nosuchcoffer':
-        string = usermsg.nosuchcoffer; break;
-      case 'lootgained':
-        string = args[0]; break;
-      case 'nonequipped':
-        string = usermsg.nonequipped; break;
-      case 'unequipsuccess':
-        string = usermsg.unequipsuccess1 + Format.capitalizeFirsts(args[0].name) +
-          usermsg.unequipsuccess2 + "[" + Format.capitalizeFirsts(args[1]) + "]."; break;
-      case 'invalidslot':
-        string = usermsg.invalidslot; break;
-      case 'equipsuccess':
-        if (args[1] == null) {
-          string = usermsg.equipsuccess1 + Format.capitalizeFirsts(args[0].name) + usermsg.equipsuccess2 + "[" +
-            Format.capitalizeFirsts(args[0].slot) + "].";
-        } else {
-          string = usermsg.replacesuccess1 + Format.capitalizeFirsts(args[1].name) + usermsg.replacesuccess2 +
-            Format.capitalizeFirsts(args[0].name) + usermsg.replacesuccess3 + "[" + Format.capitalizeFirsts(args[0].slot) + "].";
-        }
-        break;
-      case 'itemnotpresent':
-        string = usermsg.itemnotpresent; break;
-      case 'notenoughgold':
-        string = usermsg.notenoughgold1 + args[2] + usermsg.notenoughgold2 + args[0] + usermsg.notenoughgold3 + args[1] + "."; break;
-      default:
-        string = ""; break;
-    }
-    message.channel.send(string);
-  }
-
-  static formatAchievements(message, args, user) {
+  static formatAchievements(message, args, user, messages) {
     let contents = []
     let embed = Format.makeEmbed().setThumbnail(message.author.avatarURL());
     let user_prog = user.data.achievement_prog;
     if (args.length != 0) {
       let event_name = events.achievements[parseInt(args[0]) - 1];
-      if (event_name == undefined) { Format.sendUserMessage(message, 'nosuchachievement'); return; }
+      if (event_name == undefined) { Format.sendMessage(message, no_such_ach.format(args[0])); return; }
       let event = events.events[event_name];
       let prog = user_prog[event.achievement.id];
       if (prog == undefined) prog = 0;
@@ -405,22 +114,21 @@ class Format {
           contents.push(str);
         }
         contents.push(" ");
-        for (let key of Object.keys(event.achievement.tier_rewards)) {
-          let id = event.achievement.tier_rewards[key];
-          let str = "Tier " + key + " reward: ";
-          if (event.achievement.reward_type == 'title') {
-            str += "Title ";
-            if (isNaN(id)) {
-              str += "(varies)";
-              contents.push(str);
-              break;
-            }
-            str += "[" + DB.titles[id].title + "]"
-          }
-          contents.push(str);
-        }
       }
-
+      for (let key of Object.keys(event.achievement.tier_rewards)) {
+        let id = event.achievement.tier_rewards[key];
+        let str = "Tier " + key + " reward: ";
+        if (event.achievement.reward_type == 'title') {
+          str += "Title ";
+          if (isNaN(id)) {
+            str += "(varies)";
+            contents.push(str);
+            break;
+          }
+          str += "[" + DB.titles[id].title + "]"
+        }
+        contents.push(str);
+      }
     } else {
       embed.setTitle("Achievements");
       for (let key of Object.keys(events.events)) {
@@ -429,7 +137,7 @@ class Format {
           console.log(user_prog)
           let id = event.achievement.id + 1;
           let header = '`' + id + '`　**' +
-            event.achievement.name + "** `(" + (user_prog[id-1] == undefined ? 0 : user_prog[id-1]) + "/" + event.achievement.tiers + ")`";
+            event.achievement.name + "** `(" + (user_prog[id - 1] == undefined ? 0 : user_prog[id - 1]) + "/" + event.achievement.tiers + ")`";
           contents.push(header);
         }
       }
@@ -464,7 +172,7 @@ class Format {
       if ((target_id == undefined && button.clicker.id == message.author.id) ||
         (target_id != undefined && button.clicker.id == target_id)) {
         const arg = button.id.slice((message.author.id + type).length).trim();
-        if (isconfirm && arg != 'Confirm') { Format.sendUserMessage(message, 'cancel'); return; }
+        if (isconfirm && arg != 'Confirm') { Format.sendMessage(message, messages.gen_messages.confirmation_cancel); return; }
         replyFunction(message, arg, args);
         if (retry) awaitButtonHelper(message, filter, bot_msg, type, timer, replyFunction, args, isconfirm, retry, target_id);
       } else {
@@ -607,28 +315,11 @@ class Format {
     message.channel.send(contents);
   }
 
-  static makeActionRow = function (message, descriptor, array, isconfirm = false, target_id = undefined) {
-    let row = new MessageActionRow();
-    let i = 0;
-    let id = (target_id == undefined ? message.author.id : target_id);
-    for (let key of array) {
-      let button = new MessageButton()
-        .setID("" + id + descriptor + key)
-        .setLabel(key);
-      if (isconfirm) {
-        if (i == 0) { i++; button.setStyle("green"); }
-        else { button.setStyle("red"); }
-      } else button.setStyle("blurple");
-      row.addComponent(button);
-    }
-    return row;
-  }
-
   static formatPurchaseReply = function (message, _, args) {
     let user = args[0], item = args[1];
     userUTIL.updateItem(item, user.inventory);
     updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, user.profile.hp);
-    Format.sendUserMessage(message, 'buysuccess');
+    Format.sendMessage(message, messages.merchant.purchase_success.format(item.quantity, item.name));
   }
 
   static formatTradeEmbed = function (trade) {
@@ -720,51 +411,30 @@ class Format {
     Format.awaitButton(message, row, embed, "merchant", 45000, Format.formatMerchantReply)
   }
 
-  static formatAdvance = function (message, user) {
-    const contents = [messages.advanceembed.proceed];
-    let row = new MessageActionRow();
-    for (let key of Object.keys(DB.p_aclasses)) {
-      let entry = DB.p_aclasses[key];
-      if (entry.subclass_name.toString() == user.profile.job) {
-        let button = new MessageButton()
-          .setStyle('blurple')
-          .setID("" + message.author.id + "jobadvance " + entry.name)
-          .setLabel(entry.name);
-        row.addComponent(button);
-        contents.push("\n**" + entry.name + "**");
-        contents.push(entry.description);
-      }
-    }
-    const embed = Format.makeEmbed().setDescription(contents)
-      .setTitle(messages.advanceembed.title);
-    let filter = b => b.id.startsWith(message.author.id + "jobadvance");
-    message.channel.send(embed, row).then((bot_msg) => {
-      bot_msg.awaitButtons(filter, {
-        max: 1,
-        time: 45000,
-        errors: ['time']
-      })
-        .then(async (collected) => {
-          console.log(user.profile)
-          let keys = Array.from(collected.keys());
-          let button = collected.get(keys[0]);
-          const job = button.id.slice((message.author.id + "jobadvance").length).trim();
-          message.channel.send(messages.advancemessage.success);
-          var basic_id = DB.p_aclasses[job].base_ability_id;
-          var basic = DB.a_meta[basic_id];
-          basic.name = DB.a_desc[basic_id].name;
-          user.profile.job = job;
-          user.equipped.abilities.push(basic);
-          button.reply.defer();
-          updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, undefined).then(function () {
-            Achievement.triggerEvent(message, user, 'advance', job.toLowerCase(), 1);
-
-          });
-        })
-        .catch(collected => {
-          console.log("Error: " + collected);
-        })
+  static formatAdvanceReply = function (message, job, args) {
+    message.channel.send(messages.gen_messages.advance_success);
+    let user = args[0];
+    var basic_id = DB.p_aclasses[job].base_ability_id;
+    var basic = DB.a_meta[basic_id];
+    basic.name = DB.a_desc[basic_id].name;
+    user.profile.job = job;
+    user.equipped.abilities.push(basic);
+    updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, undefined).then(function () {
+      Achievement.triggerEvent(message, user, 'advance', job.toLowerCase(), 1);
     })
+  }
+
+  static formatAdvance = function (message, user) {
+    const classes = Object.keys(DB.p_aclasses).filter(e => DB.p_aclasses[e].subclass_name == user.profile.job)
+    let row = Format.makeActionRow(message, "advance", classes);
+    const contents = [messages.advance_embed.bio];
+    for (let key of classes) {
+      let entry = DB.p_aclasses[key];
+      contents.push("\n**" + entry.name + "**");
+      contents.push(entry.description);
+    }
+    const embed = Format.makeEmbed().setDescription(contents).setTitle(messages.advance_embed.title);
+    Format.awaitButton(message, row, embed, "advance", 45000, Format.formatAdvanceReply, [user])
   }
 
   static formatLevel = function (message, user, max) {
@@ -970,10 +640,12 @@ class Format {
               }
               rolesUTIL.assignRole(users, role_details[1][i]);
             }
-            Format.sendDungeonMessage(message, 'autostart', [server.pchannels, role_details[1], parties]);
+            for (let i = 0; i < parties; i++) {
+              Format.sendMessage(message, messages.dungeon.warning.format("<@&" + role_details[1][i].id + ">"), '', message.guild.channels.cache.get(server.pchannels[i]));
+            }
             setTimeout(function () {
               for (let i = 0; i < parties; i++) {
-                Format.sendDungeonMessage(message, 'soonstart', [server.pchannels, parties]);
+                Format.sendMessage(message, messages.dungeon.soon_start, '', message.guild.channels.cache.get(server.pchannels[i]));
               }
             }, 0);
             setTimeout(function () {

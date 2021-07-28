@@ -1,5 +1,6 @@
 const userUTIL = require('../../utils/user.js');
 const Format = require('../../utils/format.js');
+const gen_errors = require('../../data/messages.js').gen_errors;
 
 module.exports = {
   name: 'gold',
@@ -7,7 +8,7 @@ module.exports = {
   description: 'Display the amount of gold in your gold pouch.',
   execute(message, args) {
     userUTIL.userData(message).then(function (user) {
-      if (user == null) { Format.sendUserMessage(message, 'finderror'); return; }
+      if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       Format.formatGold(message, user);
     })
   }
