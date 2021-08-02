@@ -3,7 +3,8 @@ const Format = require('../../utils/format.js');
 module.exports = {
   name: 'merchant',
   aliases: ['shop', 'store'],
-  description: "Check out the merchant's wares!",
+  options: undefined,
+  description: "Browse the items that the merchant has in stock.",
   execute(message, args) {
     Format.formatMerchant(message);
   }

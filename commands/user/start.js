@@ -7,7 +7,7 @@ module.exports = {
   aliases: undefined,
   description: 'Start your journey as an adventurer!',
   execute(message, args) {
-    userUTIL.userData(message, userUTIL.eREQUESTS.NONREQUIRE).then(function (user) {
+    userUTIL.userData(message.author.id, userUTIL.eREQUESTS.NONREQUIRE).then(function (user) {
       if (user != null) { Format.sendMessage(message, gen_errors.self_has_acc); return; }
       Format.formatStart(message);
     });

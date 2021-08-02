@@ -4,9 +4,9 @@ const Item = require('../classes/item.js');
 const DB = require('../utils/db.js');
 const updateUTIL = require('../utils/update.js');
 const userUTIL = require('../utils/user.js');
-const Format = require('../utils/format.js');
 
 class Exploration {
+  static STORY_CHANCE = 0.15; 
   static MIN_EVENTS = 3;
   static MAX_EVENTS = 4;
   static NEG_CHANCE = 0.1;
@@ -17,6 +17,7 @@ class Exploration {
   static TANKS = ['Warrior', 'Holy Knight', 'Dark Knight'];
   static HEALERS = ['Priest'];
   static LEVEL_ADJUST = 0.06;
+
 
   static routes = {
     'road': {
@@ -50,7 +51,7 @@ class Exploration {
           stat_change: 1
         },
         {
-          chance: 0.4,
+          chance: 0.5,
           event_type: 'loot_change',
           description: 'A traveling merchant can be seen advertising their wares in the ' +
             'distance. They offer the crew their blessings and gives the crew some of their inventory.',
@@ -60,7 +61,7 @@ class Exploration {
           reward_max: 2
         },
         {
-          chance: 0.2,
+          chance: 0.3,
           event_type: 'loot_change',
           description: 'An abandoned wagon sits at the side of the road. The caravan stops and rummages ' +
             'through its goods. From the looks of it, its owner seemed to be quite wealthy.',

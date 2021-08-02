@@ -10,7 +10,7 @@ exports.eMAX_LEVEL = MAX_LEVEL;
 const EXP_MSG_CD = 6000;
 
 exports.grantEXP = async (message, exp = BASE, multi = 1) => {
-  userUTIL.userData(message, userUTIL.eREQUESTS.OPTIONAL).then(function (user) {
+  userUTIL.userData(message.author.id, userUTIL.eREQUESTS.OPTIONAL).then(function (user) {
     if (user == null || user.profile.level == MAX_LEVEL || message.createdTimestamp - user.lastmsg < EXP_MSG_CD) return;
     console.log("Success: Received user data");
     var req = DB.exp[user.profile.level - 1];

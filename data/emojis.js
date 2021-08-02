@@ -1,5 +1,7 @@
 exports.default = {
-  check: '✅'
+  check: '✅',
+  back: '◀️', 
+  next: '▶️'
 }
 
 exports.general = {

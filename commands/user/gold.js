@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['money', 'cash'],
   description: 'Display the amount of gold in your gold pouch.',
   execute(message, args) {
-    userUTIL.userData(message).then(function (user) {
+    userUTIL.userData(message.author.id).then(function (user) {
       if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       Format.formatGold(message, user);
     })

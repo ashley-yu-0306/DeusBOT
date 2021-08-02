@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['p'],
   description: 'Party up with other users to fight in dungeons together.',
   execute(message, args) {
-    userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+    userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       if (user.data.busy == 'dungeon') { Format.sendMessage(message, gen_errors.self_busy_dungeon); return; }
       if (subcommands.includes(args[0])) {
@@ -33,7 +33,7 @@ module.exports = {
           target_id = target_id.slice(0, target_id.length - 1);
           let target_dp = message.guild.members.cache.get(target_id).user;
           if (target_dp == undefined) { Format.sendMessage(message, gen_errors.no_such_user.format(args[1])); return; }
-          userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target) {
+          userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target) {
             if (target == null) { Format.sendMessage(message, gen_errors.other_no_acc.format(target_dp.tag)); return; }
             if (target.id == user.id) { Format.sendMessage(message, gen_errors.target_self); return; }
             if (party != undefined && !party.isLeader(user.id)) { Format.sendMessage(message, messages.not_leader); return; }

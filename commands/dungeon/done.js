@@ -14,7 +14,7 @@ module.exports = {
   execute(message, args) {
     serverUTIL.serverData(message).then(function (server) {
       if (!Assertion.assertDungeonCommand(message, undefined, server)) return;
-      userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+      userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
         if (!Assertion.assertDungeonCommand(message, user, server)) return;
         var dungeon = Dungeon.getDungeon(server.activedungeon);
         const party_index = dungeon.getPartyNumber(user.id) - 1;

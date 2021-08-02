@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['t'],
   description: 'Trade items or gold with another user.',
   execute(message, args) {
-    userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+    userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       if (user.data.busy == 'dungeon') { Format.sendMessage(message, gen_errors.self_busy_dungeon); return; }
       if (args.length == 0) { Format.sendMessage(message, messages.mention_user, syntax.trade_invite); return; }
@@ -52,7 +52,7 @@ module.exports = {
           if (done) {
             let target_id = trade_id.slice(0, trade_id.indexOf("_"))
             if (target_id == user.id) target_id = trade_id.slice(trade_id.indexOf('_') + 1);
-            userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target_gp) {
+            userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target_gp) {
               trade.finalizeTrade(user, target_gp);
               Format.sendMessage(message, messages.trade_complete);
             })
@@ -65,7 +65,7 @@ module.exports = {
         if (target_id == user.id) { Format.sendMessage(message, gen_errors.target_self); return; }
         let target = message.guild.members.cache.get(target_id);
         if (target == undefined) { Format.sendMessage(message, gen_errors.no_such_user); return; }
-        userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target_gp) {
+        userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE, target_id).then(function (target_gp) {
           if (target_gp == null) { Format.sendMessage(message, gen_errors.other_no_acc.format(target.user.tag)); return; }
           if (target_gp.data.busy == 'dungeon') { Format.sendMessage(message, gen_errors.other_busy_dungeon); return; }
           Format.formatConfirmation(message, 'Trade', messages.trade_initiation.format(target.user.tag, message.author.tag), Format.formatTradeReply, [target.user.tag, target_id, target_gp, user], target_id, "Accept")

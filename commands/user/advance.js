@@ -8,7 +8,7 @@ module.exports = {
   aliases: ['adv'],
   description: 'Narrow down on your specialty and become even stronger!',
   execute(message, args) {
-    userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+    userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       if (user.data.busy == 'dungeon') { Format.sendMessage(message, gen_errors.self_busy_dungeon); return; }
       if (user.level < 10) { Format.sendMessage(message, gen_errors.req_level.format(10)); return; }

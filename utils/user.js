@@ -12,11 +12,11 @@ exports.eREQUESTS = REQUESTS;
  * @param start whether or not this message was triggered by '{prefix}start' command
  * @return a user object or null, depending on whether a user was found 
 */
-exports.userData = async (message, type, other = undefined) => {
-  var query = await DB.getEntryByID(other == undefined ? message.author.id : other, DB.eTABLES.user);
+exports.userData = async (id, type, other = undefined) => {
+  var query = await DB.getEntryByID(other == undefined ? id : other, DB.eTABLES.user);
   if (query.Items.length == 0) {
     if (type == REQUESTS.REQUIRE) {
-      console.log("Error: User with id " + message.author.id + " does not exist.");
+      console.log("Error: User with id " + id + " does not exist.");
     }
     return null;
   } else {

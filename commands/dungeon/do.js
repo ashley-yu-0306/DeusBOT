@@ -14,7 +14,7 @@ module.exports = {
   execute(message, args) {
     serverUTIL.serverData(message).then(function (server) {
       if (!Assertion.assertDungeonCommand(message, undefined, server)) return;
-      userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+      userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
         if (args.length < 2) {
           formatUTIL.sendMessage(message, gen_errors.missing_args, syntax.do);
           return;

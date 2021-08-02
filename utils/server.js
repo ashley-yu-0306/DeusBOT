@@ -1,7 +1,7 @@
 const DB = require('../utils/db.js');
 const roleUTILS = require('../utils/roles.js');
 
-const serverJoin = function (server) {
+const serverJoin = async (server) => {
   const guild = {
     id: server.id,
     lastdungeon: 0,
@@ -17,13 +17,12 @@ const serverJoin = function (server) {
   };
   DB.eUpdateEntry(DB.eTABLES.guild, guild);
   console.log("Success: Server with id " + server.id + " has been successfully added.");
-  return guild;
 }
 
 exports.eServerJoin = serverJoin;
 
-exports.serverData = async (message) => {
-  var query = await DB.getEntryByID(message.guild.id, DB.eTABLES.guild);
+exports.serverData = async (message, id) => {
+  var query = await DB.getEntryByID(id == undefined ? message.guild.id : id, DB.eTABLES.guild);
   if (query.Items.length == 0) {
     console.log("Error: Server with id " + message.guild.id + " does not exist. Now adding server.");
     const server = serverJoin(message.guild);

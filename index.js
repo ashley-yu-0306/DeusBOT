@@ -1,7 +1,7 @@
 require('dotenv').config();
 const prefix = process.env.PREFIX;
 
-const Discord = require('discord.js');
+const { Collection, Client, Intents } = require('discord.js');
 const fs = require('fs');
 const Dungeon = require('./classes/dungeon.js');
 const exp = require('./utils/exp.js');
@@ -9,15 +9,23 @@ const update = require('./utils/update.js');
 const server = require('./utils/server.js');
 const Format = require('./utils/format.js');
 const roleUTILS = require('./utils/roles.js');
-const client = new Discord.Client();
+const { waitForDebugger } = require('inspector');
+const { ServerlessApplicationRepository } = require('aws-sdk');
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 require('discord-buttons')(client);
-client.commands = new Discord.Collection();
+client.commands = new Collection();
 
 const COMMAND_DIR = './commands';
 
 const initCommand = function (commandFiles, path) {
   for (const file of commandFiles) {
-    var command = require(`${path}${file}`);
+    let command = require(`${path}${file}`);
+    if (command.interaction) client.api.applications(client.user.id).guilds('856965073850073119').commands.post({
+      data: {
+        name: command.name,
+        description: command.description
+      }
+    });
     client.commands.set(command.name, command);
     if (command.aliases != undefined) {
       for (let alias of command.aliases) {
@@ -27,7 +35,7 @@ const initCommand = function (commandFiles, path) {
   }
 }
 
-const initCommands = function () {
+const initCommands = async () => {
   const dirs = fs.readdirSync(COMMAND_DIR, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name)
@@ -50,18 +58,26 @@ const parseCommand = function (message) {
 
 client.once('ready', () => {
   initCommands();
-  console.log('READY: All startup tasks completed.');
 });
 
-client.on('guildCreate', guild => {
-  server.eServerJoin(guild).then(function (server) {
+client.on('guildCreate', async guild => {
+  await server.eServerJoin(guild);
+  server.serverData(undefined, guild.id).then(function (server) {
     roleUTILS.initRoles(guild, server);
   })
 })
 
+/** client.ws.on('INTERACTION_CREATE', async interaction => {
+  try {
+    client.commands.get(interaction.data.name).execute(interaction);
+  } catch (error) {
+    console.log("Caught error in interaction (index, 76)")
+  }
+}) */
+
 client.on('message', message => {
   if (message.author.bot) return;
-    // Try to spawn dungeon 
+  // Try to spawn dungeon 
   server.serverData(message).then(function (guild) {
     if ((message.createdTimestamp - guild.lastdungeoncheck > Dungeon.DUNGEON_RATE ||
       guild.lastdungeoncheck == 0) && (message.createdTimestamp - guild.lastdungeon >

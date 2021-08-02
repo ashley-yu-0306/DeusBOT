@@ -9,7 +9,7 @@ module.exports = {
   aliases: ['ach', 'a', 'achievement'],
   description: "Display all possible achievements",
   execute(message, args) {
-    userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+    userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       if (args.length != 0 && isNaN(args[0])) { Format.sendMessage(message, messages.NaN.format(args[0]), syntax.achievements); return; }
       Format.formatAchievements(message, args, user, messages);

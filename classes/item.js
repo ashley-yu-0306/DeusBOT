@@ -11,6 +11,7 @@ class Item {
   };
 
   static makeCategory = function (item) {
+    console.log(item)
     var cats = [item.category1];
     if (item.category2 != undefined) cats.push(item.category2);
     item.category = cats

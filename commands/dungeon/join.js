@@ -15,7 +15,7 @@ module.exports = {
     serverUTIL.serverData(message).then(function (server) {
       if (server.activedungeon == null) { formatUTIL.sendMessage(message, messages.inactive_dungeon); return; }
       else {
-        userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+        userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
           if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
           if (user.data.busy == 'dungeon') { Format.sendMessage(message, gen_errors.self_busy_dungeon); return; }
           var dungeon = Dungeon.getDungeon(guild.activedungeon);

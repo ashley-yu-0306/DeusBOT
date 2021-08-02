@@ -35,6 +35,11 @@ exports.merchant = {
   no_items: "You do not have items in your inventory under the category 'items'. Please try again with an individual item."
 }
 
+exports.embeds = {
+  info: '**Obtained from**: {0}\n**Categories**: {3}\n**Tradeable**: {1}\n' + 
+  '**Sell Cost**: {2}\n\n**Description**: {4}'
+}
+
 exports.syntax = {
   set_channel: 'Syntax: `' + prefix + 'setchannel <party #> <channel>` (example: ' + prefix + 'setchannel 3 #dungeon-3)',
   buy: 'Syntax: `' + prefix + 'buy <optional: item quantity> <item name>` (example: ' + prefix + 'buy 2 small health pot)',

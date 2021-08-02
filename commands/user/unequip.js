@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['ue'],
   description: "Unequip the given item.",
   execute(message, args) {
-    userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+    userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       if (user.data.busy == 'dungeon') { Format.sendMessage(message, gen_errors.self_busy_dungeon); return; }
       if (args.length == 0) { Format.sendMessage(message, gen_errors.missing_args, syntax.unequip); return; }

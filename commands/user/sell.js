@@ -1,7 +1,6 @@
 const DB = require('../../utils/db.js');
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
-const Item = require('../../classes/item.js');
 const gen_errors = require('../../data/messages.js').gen_errors;
 const syntax = require('../../data/messages.js').syntax;
 const messages = require('../../data/messages.js').merchant;
@@ -12,9 +11,10 @@ module.exports = {
   aliases: ['s', 'sell'],
   description: "Sell the specified quantity of the specificed item.",
   execute(message, args) {
-    userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
+    userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE).then(function (user) {
       if (user == null) { Format.sendMessage(message, gen_errors.self_no_acc); return; }
       if (user.data.busy == 'dungeon') { Format.sendMessage(message, gen_errors.self_busy_dungeon); return; }
+      if (args.length == 0) { Format.sendMessage(message, gen_errors.missing_args, syntax.open); return; }
       var quantity = 0;
       var index = 0;
       if (isNaN(args[0])) {
@@ -26,12 +26,14 @@ module.exports = {
       for (let i = index; i < args.length; i++) name += args[i] + " ";
       name = name.trim();
       if (quantity == -1 && name == 'items') {
-        let empty = true, gold;
+        let empty = true, gold = 0;
         for (let key of Object.keys(user.inventory)) {
           empty = false;
           var item = user.inventory[key];
-          gold += item.quantity * item.sellcost;
-          delete user.inventory[key];
+          if (item.category.includes('items')) {
+            gold += item.quantity * parseInt(item.sellcost);
+            delete user.inventory[key];
+          }
         }
         if (empty) { Format.sendMessage(message, messages.no_items, syntax.sell); return; }
         user.profile.gold += gold;

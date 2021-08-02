@@ -37,13 +37,15 @@ class Format {
     return "<:" + name + ":" + emoji.general[name] + ">";
   }
 
-  static makeActionRow = function (message, descriptor, array, isconfirm = false,
-    target_id = undefined, ismulticonfirm = false, partyid = "", otherids = undefined) {
+  static makeActionRow = function (id, descriptor, array, isconfirm = false,
+    target_id = undefined, ismulticonfirm = false, partyid = "", otherids = undefined,
+    disabled = undefined) {
     let row = new MessageActionRow();
-    let id = target_id == undefined ? message.author.id : target_id;
+    let use_id = target_id == undefined ? id : target_id;
     for (let i = 0; i < array.length; i++) {
-      let button = new MessageButton().setID("" + (partyid != "" ? partyid : id) +
-        descriptor + (otherids == undefined ? array[i] : otherids[i])).setLabel(array[i]);
+      let button = new MessageButton().setID("" + (partyid != "" ? partyid : use_id) +
+        descriptor + (otherids == undefined ? array[i] : otherids[i])).setLabel(array[i])
+        .setDisabled(disabled != undefined && disabled[i]);
       if (isconfirm || ismulticonfirm) {
         if (i == 0 || (ismulticonfirm && i != array.length - 1)) button.setStyle("green");
         else button.setStyle("red");
@@ -77,7 +79,7 @@ class Format {
     else message.channel.send(string);
   }
 
-  static awaitButtonHelper = async (message, filter, bot_msg, type, timer,
+  static awaitButtonHelper = async (message, inter, id, filter, bot_msg, type, timer,
     replyFunction, args, isconfirm, retry, other_id, isPartyID,
     confirmed, awaiting) => {
     bot_msg.awaitButtons(filter, {
@@ -87,40 +89,45 @@ class Format {
     }).then(async (collected) => {
       const button = collected.get(Array.from(collected.keys())[0]);
       button.reply.defer();
-      userUTIL.userData(message, userUTIL.eREQUESTS.OPTIONAL, button.clicker.id).then(function (user) {
-        if ((other_id == undefined && button.clicker.id == message.author.id) ||
+      userUTIL.userData(button.clicker.id, userUTIL.eREQUESTS.OPTIONAL).then(function (user) {
+        if ((other_id == undefined && button.clicker.id == id) ||
           (other_id != undefined && ((!isPartyID && button.clicker.id == other_id) ||
             (isPartyID && user.data.partyid == other_id && button.id.includes(user.id))))) {
-          const arg = button.id.slice(((other_id == undefined ? message.author.id : other_id) + type).length).trim();
+          const arg = button.id.slice(((other_id == undefined ? id : other_id) + type).length).trim();
           console.log("Button ID " + button.id)
           console.log(button.id.includes('Cancel'))
           if (isconfirm && button.id.includes('Cancel')) {
-            if (!isPartyID) Format.sendMessage(message, messages.gen_messages.confirmation_cancel);
+            if (!isPartyID) {
+              if (message != undefined) Format.sendMessage(message, messages.gen_messages.confirmation_cancel);
+              else inter.reply(messages.gen_messages.confirmation_cancel);
+            }
             else {
               let tag = message.guild.members.cache.get(button.clicker.id).user.tag;
-              Format.sendMessage(message, messages.gen_messages.cancel.format(tag));
+              if (message != undefined) Format.sendMessage(message, messages.gen_messages.cancel.format(tag));
+              else inter.reply(messages.gen_messages.cancel.format(tag));
             }
             return;
           }
           if (isconfirm && isPartyID) {
-            console.log("Sending message for confirm")
             let tag = message.guild.members.cache.get(button.clicker.id).user.tag;
-            Format.sendMessage(message, messages.gen_messages.confirm.format(tag));
+            if (message != undefined) Format.sendMessage(message, messages.gen_messages.confirm.format(tag));
+            else inter.reply(messages.gen_messages.confirm.format(tag));
           }
           if (!isPartyID || (isPartyID && confirmed[user.id] == undefined && awaiting == 1)) {
             replyFunction(message, isPartyID ? 'Confirm' : arg, args);
-            if (retry) awaitButtonHelper(message, filter, bot_msg, type, timer,
+            if (retry) Format.awaitButtonHelper(message, inter, id, filter, bot_msg, type, timer,
               replyFunction, args, isconfirm, retry, other_id, isPartyID);
           } else {
             confirmed[user.id] = true;
             awaiting -= 1;
-            Format.sendMessage(message, messages.gen_messages)
-            awaitButtonHelper(message, filter, bot_msg, type, timer,
+            if (message != undefined) Format.sendMessage(message, messages.gen_messages.confirm.format(tag));
+            else inter.reply(messages.gen_messages.confirm.format(tag));
+            Format.awaitButtonHelper(message, inter, id, filter, bot_msg, type, timer,
               replyFunction, args, isconfirm, retry, other_id, isPartyID,
               confirmed, awaiting);
           }
         } else {
-          Format.awaitButtonHelper(message, filter, bot_msg, type, timer,
+          Format.awaitButtonHelper(message, inter, id, filter, bot_msg, type, timer,
             replyFunction, args, isconfirm, retry, other_id, isPartyID,
             confirmed, awaiting);
         }
@@ -132,22 +139,78 @@ class Format {
     })
   }
 
-  static awaitButton = async (message, row, embed, type, timer, replyFunction, args = undefined,
-    isconfirm = false, retry = false, target_id = undefined, isParty = false, awaiting = 0) => {
+  static awaitButton = function (message, inter, id, row, embed, type, timer, replyFunction, args = undefined,
+    isconfirm = false, retry = false, target_id = undefined, isParty = false, awaiting = 0, bot_msg = undefined) {
     let filter = b => b.id.startsWith((target_id == undefined ? message.author.id : target_id) + type);
-    message.channel.send(embed, row).then((bot_msg) => {
-      Format.awaitButtonHelper(message, filter, bot_msg, type, timer, replyFunction,
-        args, isconfirm, retry, target_id, isParty, isParty ? {} : undefined,
-        awaiting);
-    })
+    if (bot_msg != undefined) Format.awaitButtonHelper(message, inter, id, filter, bot_msg, type, timer, replyFunction,
+      args, isconfirm, retry, target_id, isParty, isParty ? {} : undefined,
+      awaiting);
+    else {
+      if (message != undefined) message.channel.send(embed, row).then((bot_msg) => {
+        Format.awaitButtonHelper(message, inter, id, filter, bot_msg, type, timer, replyFunction,
+          args, isconfirm, retry, target_id, isParty, isParty ? {} : undefined,
+          awaiting);
+      });
+      else inter.reply(embed, row).then((bot_msg) => {
+        Format.awaitButtonHelper(message, inter, id, filter, bot_msg, type, timer, replyFunction,
+          args, isconfirm, retry, target_id, isParty, isParty ? {} : undefined,
+          awaiting);
+      });
+    }
+  }
+
+  static formatArrows = function (message) {
+    return Format.makeActionRow(message.author.id, 'pagination',
+      [Format.makeEmoji('default', 'back'), " ", Format.makeEmoji('default', 'next')],
+      false, undefined, false, '', ['back', 'empty', 'next'],
+      [false, true, false]);
+  }
+
+  static pagination = function (message, choice, args) {
+    let embed = Format.makeEmbed().setTitle(args[2]), page, contents = args[3];
+    if (choice == undefined) page = 0;
+    else {
+      page = args[1];
+      console.log(args[3])
+      console.log("max page " + (Math.ceil(contents.length / 10) - 1));
+      if (choice == 'back') {
+        if (page == 0) page = Math.ceil(contents.length / 10) - 1;
+        else page -= 1;
+      } else {
+        console.log(page == Math.ceil(contents.length / 10) - 1)
+        if (page == Math.ceil(contents.length / 10) - 1) page = 0;
+        else page += 1;
+      }
+      console.log("page " + page)
+    }
+    let desc = "", l = 10 * page, r = contents.length < l + 10 ? contents.length : l + 10,
+      row = args[4];
+    for (let i = l; i < r; i++) desc += contents[i] + "\n";
+    embed.setDescription(desc).setFooter('Showing entries {0} to {1} out of {2} entries.'
+      .format(l + 1, r, contents.length));
+    if (args[0] == undefined) {
+      console.log("undefined true")
+      row = Format.formatArrows(message);
+      message.channel.send(embed, row).then(function (bot_msg) {
+        Format.awaitButton(message, undefined, message.author.id, row, embed,
+          'pagination', 30000, Format.pagination, [bot_msg, page, args[2], args[3], row], false, false,
+          undefined, false, 0, bot_msg);
+      });
+    } else {
+      args[0].edit(embed);
+      Format.awaitButton(message, undefined, message.author.id, row, embed,
+        'pagination', 30000, Format.pagination, [args[0], page, args[2], args[3], row], false, false,
+        undefined, false, 0, args[0]);
+    }
+
   }
 
   static formatConfirmation = function (message, type, details, reply, args,
     target_id = undefined, alter_title = "") {
-    let row = Format.makeActionRow(message, type, Format.CONFIRMATION, true, target_id);
+    let row = Format.makeActionRow(message.author.id, type, Format.CONFIRMATION, true, target_id);
     const embed = Format.makeEmbed().setDescription(details)
       .setTitle((alter_title == "" ? "Confirm " : alter_title + " ") + type);
-    Format.awaitButton(message, row, embed, type, 20000, reply, args, true, false, target_id);
+    Format.awaitButton(message, undefined, message.author.id, row, embed, type, 20000, reply, args, true, false, target_id);
   }
 
   static formatPartyConfirmation = function (message, type, details, reply, args, title, party) {
@@ -159,10 +222,10 @@ class Format {
     all_ids += party.leader_id + " Cancel";
     ids.push(all_ids);
     array.push("Cancel");
-    let row = Format.makeActionRow(message, type, array, false, undefined, true, party.party_id, ids);
+    let row = Format.makeActionRow(message.author.id, type, array, false, undefined, true, party.party_id, ids);
     const embed = Format.makeEmbed().setDescription(details)
       .setTitle(title);
-    Format.awaitButton(message, row, embed, type, 30000, reply, args, true, false,
+    Format.awaitButton(message, undefined, message.author.id, row, embed, type, 30000, reply, args, true, false,
       party.party_id, true, ids.length - 1);
   }
 
@@ -193,7 +256,7 @@ class Format {
     if (party != undefined) {
       for (let id of keys) {
         users.push(party.members[id]);
-        userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE, id).then(function (user) {
+        userUTIL.userData(message.author.id, userUTIL.eREQUESTS.REQUIRE, id).then(function (user) {
           user.data.busy = "explore party " + level + " " + (Date.now() + 7200000);
           updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory,
             user.equipped, user.profile, user.profile.hp);
@@ -261,8 +324,8 @@ class Format {
       "Available explorations: \n\n　•　`Lv. 5 ` exploration \n　•　`Lv. 10` exploration \n　•　`Lv. 15` " +
       "exploration \n　•　`Lv. 20` exploration\n　•　`Lv. 25` exploration\n\nWhich exploration would you like to embark on?")
       .setTitle("Embark on an exploration");
-    let row = Format.makeActionRow(message, "explore", ['Lv. 5', 'Lv. 10', 'Lv. 15', 'Lv. 20', 'Lv. 25']);
-    Format.awaitButton(message, row, embed, "explore", 30000, this.formatExploreReply, [user]);
+    let row = Format.makeActionRow(message.author.id, "explore", ['Lv. 5', 'Lv. 10', 'Lv. 15', 'Lv. 20', 'Lv. 25']);
+    Format.awaitButton(message, undefined, message.author.id, row, embed, "explore", 30000, this.formatExploreReply, [user]);
   }
 
   static formatAchievements = function (message, args, user, messages) {
@@ -562,11 +625,11 @@ class Format {
   }
 
   static formatMerchant = function (message) {
-    let row = Format.makeActionRow(message, "merchant", Object.keys(loot.merchant_loot));
+    let row = Format.makeActionRow(message.author.id, "merchant", Object.keys(loot.merchant_loot));
     const bio = [messages.merchant.bio, " ", messages.merchant.bio_helper];
     const embed = Format.makeEmbed().setDescription(bio)
       .setTitle("Merchant");
-    Format.awaitButton(message, row, embed, "merchant", 45000, Format.formatMerchantReply)
+    Format.awaitButton(message, undefined, message.author.id, row, embed, "merchant", 45000, Format.formatMerchantReply)
   }
 
   static formatAdvanceReply = function (message, job, args) {
@@ -584,7 +647,7 @@ class Format {
 
   static formatAdvance = function (message, user) {
     const classes = Object.keys(DB.p_aclasses).filter(e => DB.p_aclasses[e].subclass_name == user.profile.job)
-    let row = Format.makeActionRow(message, "advance", classes);
+    let row = Format.makeActionRow(message.author.id, "advance", classes);
     const contents = [messages.advance_embed.bio];
     for (let key of classes) {
       let entry = DB.p_aclasses[key];
@@ -592,7 +655,7 @@ class Format {
       contents.push(entry.description);
     }
     const embed = Format.makeEmbed().setDescription(contents).setTitle(messages.advance_embed.title);
-    Format.awaitButton(message, row, embed, "advance", 45000, Format.formatAdvanceReply, [user])
+    Format.awaitButton(message, undefined, message.author.id, row, embed, "advance", 45000, Format.formatAdvanceReply, [user])
   }
 
   static formatLevel = function (message, user, max) {
