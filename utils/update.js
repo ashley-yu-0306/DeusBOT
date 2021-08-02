@@ -4,28 +4,14 @@ const Party = require('../classes/party.js');
 exports.updateUser = async (id, lastmsg, data, inventory, equipped, profile, hp = undefined) => {
   if (hp == undefined) {
     let job = profile.job.toLowerCase();
-    console.log("job " + job) 
     var hpbase = parseInt(DB.p_stats['HPbase'][job]);
     var hpgs = parseInt(DB.p_stats['HPgs'][job]);
-    console.log("DB stats")
-    console.log(DB.p_stats)
-    console.log("hpbase " + hpbase)
     profile.hp = Math.ceil(hpbase + (hpgs * (profile.level - 1) * (0.7025 + (0.0175 * (profile.level - 1)))));
     profile.maxhp = profile.hp;
     profile.physdmg = parseInt(DB.p_stats['PHYSbase'][job]);
     profile.magicdmg = parseInt(DB.p_stats['MAGICbase'][job]);
     profile.armor = parseInt(DB.p_stats['ARMORbase'][job]);
   }
-  console.log("data.achievement_prog")
-  console.log(data.achievement_prog)
-  console.log("data.event_data")
-  console.log(data.event_data)
-  console.log("titles")
-  console.log(data.titles)
-
-  console.log(" ")
-  console.log("profile")
-  console.log(profile)
   const user = {
     id: id,
     lastmsg: lastmsg,
@@ -34,6 +20,7 @@ exports.updateUser = async (id, lastmsg, data, inventory, equipped, profile, hp 
     equipped: equipped,
     profile: profile
   }
+  if (user.data.partyid != -1 && Party.parties.get(user.data.partyid) == undefined) user.data.partyid = -1;
   if (user.data.partyid != -1) Party.updateUserGP(user);
   await DB.eUpdateEntry(DB.eTABLES.user, user);
 }

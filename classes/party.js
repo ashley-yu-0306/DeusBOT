@@ -43,7 +43,7 @@ class Party {
   remove(id) {
     for (let key of Object.keys(this.members)) {
       let member = this.members[key];
-      if (member.usergp.id == id) { let kicked = Object.assign({}, member); delete this.members[key]; console.log(kicked); return kicked; }
+      if (member.usergp.id == id) { let kicked = Object.assign({}, member); delete this.members[key]; return kicked; }
     }
   }
 

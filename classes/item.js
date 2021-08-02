@@ -22,6 +22,7 @@ class Item {
     var item = Object.assign({}, DB.items[id]);
     item.quantity = quantity;
     Item.makeCategory(item);
+    console.log("Made " + quantity + " of " + item.name)
     return item;
   }
 

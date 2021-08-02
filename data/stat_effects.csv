@@ -1,4 +1,9 @@
 id,name,description
+-1,Level,"The user's level".
 0,HP,"The users's health."
 1,Turn,"The users's turn."
 2,Damage Taken,"The damage that the user takes."
+4,Morale,"How willing a caravan is willing to do seemingly daunting tasks."
+5,PhysDMG,"The user's physical damage"
+6,Roll,"A random roll from 1 to 100.",
+7,MagicDMG,"The user's magic damage"

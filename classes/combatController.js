@@ -230,8 +230,6 @@ class CombatController {
 
     // Parse user actions
     for (let i = 0; i < party.members.length; i++) {
-      console.log("NEW PLAYER ")
-      console.log(" ")
       var user = party.members[i];
       pupdates[i] = false;
       const queue_length = user.combat.actionqueue.length;
@@ -265,11 +263,7 @@ class CombatController {
           user = result[1];
           if (result[6] == 1) {
             floor.monsters = result[5];
-            console.log("272")
-            console.log(chain)
             if (chain != undefined) {
-              console.log("275")
-              console.log(chain)
               chain = Object.assign({}, chain);
               chain.target = 'all';
             }

@@ -1,6 +1,6 @@
-name,warrior,mage,thief,holy knight,dark knight,sorcerer,priest,reaper,phantom
-HPbase,450,430,445,1650,1540,1200,1075,1300,1250
-HPgs,106,64,72,134,125,97,92,110,106
-ARMORbase,10,4,6,43,40,20,18,26,24
-PHYSbase,59,46,64,84,87,62,59,114,103
-MAGICbase,0,47,0,0,34,71,68,0,41
+name,warrior,mage,thief,holy knight,dark knight,sorcerer,priest,reaper,phantom,prim_avg,adv_avg
+HPbase,450,430,445,1650,1540,1200,1075,1300,1250,441,1335
+HPgs,106,64,72,134,125,97,92,110,106,80,110
+ARMORbase,10,4,6,43,40,20,18,26,24,
+PHYSbase,59,46,64,84,87,62,59,114,103,56,84
+MAGICbase,0,47,0,0,34,71,68,0,41,16,38

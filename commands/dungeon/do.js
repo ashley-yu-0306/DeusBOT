@@ -33,7 +33,6 @@ module.exports = {
         if (profile.combat.ap < abil.apcost) {
           formatUTIL.sendMessage(message, messages.insuff_AP); return;
         }
-        let dungeon = Dungeon.getDungeon(server.activedungeon);
         const mem_index = dungeon.getPartyMemberIndex(user.id);
         const monster = dungeon.activeFloors[party_index].monsters[args[1] - 1];
         if (monster == null) {

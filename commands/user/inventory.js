@@ -1,6 +1,6 @@
 const Format = require('../../utils/format.js');
 const userUTIL = require('../../utils/user.js');
-const CONTENTS = ['equipment', 'weapons', 'armor', 'consumables', 'items']
+const CONTENTS = ['equipment', 'weapons', 'armor', 'consumables', 'items', 'rings']
 const gen_errors = require('../../data/messages.js').gen_errors;
 
 module.exports = {

@@ -10,8 +10,9 @@ const Trading = require('../classes/trading.js');
 const Party = require('../classes/party.js');
 const loot = require('../data/loot.js');
 const events = require('../data/events.js');
-const Achievement = require('../classes/achievements.js');
+const eventHandler = require('../classes/eventHandler.js');
 const { MessageActionRow, MessageButton } = require('discord-buttons');
+const Exploration = require('../classes/exploration.js');
 
 String.prototype.format = function () {
   var args = arguments;
@@ -25,7 +26,7 @@ String.prototype.format = function () {
  */
 class Format {
   static PREPOSITION = ["of"];
-  static CONFIRMATION = ["Confirm", "Cancel"]
+  static CONFIRMATION = ["Confirm", "Cancel"];
 
   static makeEmbed = function () {
     return new Discord.MessageEmbed().setColor('#B93418');
@@ -36,14 +37,16 @@ class Format {
     return "<:" + name + ":" + emoji.general[name] + ">";
   }
 
-  static makeActionRow = function (message, descriptor, array, isconfirm = false, target_id = undefined) {
+  static makeActionRow = function (message, descriptor, array, isconfirm = false,
+    target_id = undefined, ismulticonfirm = false, partyid = "", otherids = undefined) {
     let row = new MessageActionRow();
-    let id = (target_id == undefined ? message.author.id : target_id);
+    let id = target_id == undefined ? message.author.id : target_id;
     for (let i = 0; i < array.length; i++) {
-      let button = new MessageButton().setID("" + id + descriptor + array[i]).setLabel(array[i]);
-      if (isconfirm) {
-        if (i == 0) { i++; button.setStyle("green"); }
-        else { button.setStyle("red"); }
+      let button = new MessageButton().setID("" + (partyid != "" ? partyid : id) +
+        descriptor + (otherids == undefined ? array[i] : otherids[i])).setLabel(array[i]);
+      if (isconfirm || ismulticonfirm) {
+        if (i == 0 || (ismulticonfirm && i != array.length - 1)) button.setStyle("green");
+        else button.setStyle("red");
       } else button.setStyle("blurple");
       row.addComponent(button);
     }
@@ -69,13 +72,201 @@ class Format {
   }
 
   static sendMessage = function (message, string, syntaxError = '', user = undefined) {
-    string += syntaxError == '' ? '' : "\n" + syntaxError;
+    string += syntaxError == '' ? syntaxError : "\n" + syntaxError;
     if (user != undefined) user.send(string);
     else message.channel.send(string);
   }
 
-  static formatAchievements(message, args, user, messages) {
-    let contents = []
+  static awaitButtonHelper = async (message, filter, bot_msg, type, timer,
+    replyFunction, args, isconfirm, retry, other_id, isPartyID,
+    confirmed, awaiting) => {
+    bot_msg.awaitButtons(filter, {
+      max: 1,
+      time: timer,
+      errors: ['time']
+    }).then(async (collected) => {
+      const button = collected.get(Array.from(collected.keys())[0]);
+      button.reply.defer();
+      userUTIL.userData(message, userUTIL.eREQUESTS.OPTIONAL, button.clicker.id).then(function (user) {
+        if ((other_id == undefined && button.clicker.id == message.author.id) ||
+          (other_id != undefined && ((!isPartyID && button.clicker.id == other_id) ||
+            (isPartyID && user.data.partyid == other_id && button.id.includes(user.id))))) {
+          const arg = button.id.slice(((other_id == undefined ? message.author.id : other_id) + type).length).trim();
+          console.log("Button ID " + button.id)
+          console.log(button.id.includes('Cancel'))
+          if (isconfirm && button.id.includes('Cancel')) {
+            if (!isPartyID) Format.sendMessage(message, messages.gen_messages.confirmation_cancel);
+            else {
+              let tag = message.guild.members.cache.get(button.clicker.id).user.tag;
+              Format.sendMessage(message, messages.gen_messages.cancel.format(tag));
+            }
+            return;
+          }
+          if (isconfirm && isPartyID) {
+            console.log("Sending message for confirm")
+            let tag = message.guild.members.cache.get(button.clicker.id).user.tag;
+            Format.sendMessage(message, messages.gen_messages.confirm.format(tag));
+          }
+          if (!isPartyID || (isPartyID && confirmed[user.id] == undefined && awaiting == 1)) {
+            replyFunction(message, isPartyID ? 'Confirm' : arg, args);
+            if (retry) awaitButtonHelper(message, filter, bot_msg, type, timer,
+              replyFunction, args, isconfirm, retry, other_id, isPartyID);
+          } else {
+            confirmed[user.id] = true;
+            awaiting -= 1;
+            Format.sendMessage(message, messages.gen_messages)
+            awaitButtonHelper(message, filter, bot_msg, type, timer,
+              replyFunction, args, isconfirm, retry, other_id, isPartyID,
+              confirmed, awaiting);
+          }
+        } else {
+          Format.awaitButtonHelper(message, filter, bot_msg, type, timer,
+            replyFunction, args, isconfirm, retry, other_id, isPartyID,
+            confirmed, awaiting);
+        }
+      })
+    }).catch(collected => {
+      console.log("Error: Waited too long for button reply.");
+      console.log(collected)
+      return;
+    })
+  }
+
+  static awaitButton = async (message, row, embed, type, timer, replyFunction, args = undefined,
+    isconfirm = false, retry = false, target_id = undefined, isParty = false, awaiting = 0) => {
+    let filter = b => b.id.startsWith((target_id == undefined ? message.author.id : target_id) + type);
+    message.channel.send(embed, row).then((bot_msg) => {
+      Format.awaitButtonHelper(message, filter, bot_msg, type, timer, replyFunction,
+        args, isconfirm, retry, target_id, isParty, isParty ? {} : undefined,
+        awaiting);
+    })
+  }
+
+  static formatConfirmation = function (message, type, details, reply, args,
+    target_id = undefined, alter_title = "") {
+    let row = Format.makeActionRow(message, type, Format.CONFIRMATION, true, target_id);
+    const embed = Format.makeEmbed().setDescription(details)
+      .setTitle((alter_title == "" ? "Confirm " : alter_title + " ") + type);
+    Format.awaitButton(message, row, embed, type, 20000, reply, args, true, false, target_id);
+  }
+
+  static formatPartyConfirmation = function (message, type, details, reply, args, title, party) {
+    let ids = Object.keys(party.members);
+    ids.splice(ids.indexOf(party.leader_id), 1);
+    let all_ids = "";
+    let array = [];
+    for (let id of ids) { array.push(party.members[id].tag); all_ids += id + " " };
+    all_ids += party.leader_id + " Cancel";
+    ids.push(all_ids);
+    array.push("Cancel");
+    let row = Format.makeActionRow(message, type, array, false, undefined, true, party.party_id, ids);
+    const embed = Format.makeEmbed().setDescription(details)
+      .setTitle(title);
+    Format.awaitButton(message, row, embed, type, 30000, reply, args, true, false,
+      party.party_id, true, ids.length - 1);
+  }
+
+  static formatExploreReply = function (message, choice, args) {
+    let user = args[0];
+    console.log("DONE")
+    console.log(choice);
+    let party = Party.parties.get(user.data.partyid);
+    let keys = party == undefined ? undefined : Object.keys(party.members);
+    if (user.data.partyid != -1 && choice != 'Confirm') {
+      let contents = "";
+      for (let i = 0; i < keys.length; i++) {
+        let key = keys[i];
+        if (key == party.leader_id) continue;
+        let member = party.members[key];
+        if (i == keys.length - 1) contents += member.tag + ": ";
+        else contents += member.tag + ", ";
+      }
+      contents += "Your party leader has invited you to a **" + choice + " exploration**. The " +
+        "exploration will begin once everyone has pressed the button corresponding " +
+        "to their name.";
+      args.push(choice);
+      Format.formatPartyConfirmation(message, 'explore_confirm', contents,
+        Format.formatExploreReply, args, "Exploration Invitation", party);
+    }
+    let level = user.data.partyid == -1 ? parseInt(choice.slice(4)) : args[1];
+    let users = [];
+    if (party != undefined) {
+      for (let id of keys) {
+        users.push(party.members[id]);
+        userUTIL.userData(message, userUTIL.eREQUESTS.REQUIRE, id).then(function (user) {
+          user.data.busy = "explore party " + level + " " + (Date.now() + 7200000);
+          updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory,
+            user.equipped, user.profile, user.profile.hp);
+        })
+      }
+    } else {
+      users.push({ tag: message.author.tag, userdp: message.author, usergp: user });
+      user.data.busy = "explore " + level + " " + (Date.now() + 7200000);
+      updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory,
+        user.equipped, user.profile, user.profile.hp);
+    }
+    Format.sendMessage(message, messages.gen_messages.caravan_begin);
+    setTimeout(function () {
+      let results = Exploration.explore(users, level);
+      let exp_embed = Format.makeEmbed().setTitle('The exploration party has returned!')
+        .setDescription(results[0]);
+      let loot_embed = Format.makeEmbed().setTitle('Loot results')
+        .setDescription(results[1]);
+      for (let user of users) {
+        user.userdp.send(exp_embed);
+        user.userdp.send(loot_embed);
+      }
+    }, 10);
+  }
+
+  static formatStatus(message, user) {
+    let task = user.data.busy;
+    let embed = Format.makeEmbed().setTitle(message.author.tag + "'s Status")
+      .setThumbnail(message.author.avatarURL());
+    if (task == "") embed.setDescription("*You are not currently doing anything.*");
+    else if (task.includes('dungeon')) embed.setDescription("*You are currently in a dungeon.*");
+    else if (task.includes('explore')) {
+      let string = "*You are currently embarking on an exploration";
+      let time;
+      if (task.includes('party')) {
+        string += " with your party";
+        time = user.data.busy.slice('explore party'.length).trim();
+        time = time.slice(time.indexOf(' ')).trim();
+      } else {
+        time = user.data.busy.slice('explore'.length).trim();
+        time = time.slice(time.indexOf(' ')).trim();
+      }
+      let ms = parseInt(time) - Date.now(), seconds = Math.floor(ms / 1000) % 60,
+        minutes = Math.floor(ms / 1000 / 60) % 60, hours = Math.floor(ms / 1000 / 60 / 60) % 24;
+      string += ". The exploration caravan will return in " + hours + ":" +
+        minutes + ":" + seconds + ".*";
+      embed.setDescription(string);
+    } else if (task.includes('trade')) embed.setDescription("*You are currently in a trade.*")
+    message.channel.send(embed);
+  }
+
+  static formatExplore = function (message, user) {
+    if (user.data.partyid != -1) {
+      let party = Party.parties.get(user.data.partyid);
+      if (party == undefined && user.data.partyid != -1) {
+        Format.sendMessage(message, messages.gen_errors.enter_again);
+        updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory,
+          user.equipped, user.profile, user.profile.hp);
+        return;
+      }
+      if (!party.isLeader(user.id)) { message.channel.send(messages.party.not_leader); return; }
+    }
+    let embed = Format.makeEmbed().setDescription("For a successful journey, it is recommended for you to choose an exploration " +
+      "within 5 levels of yourself. Each exploration will take 2 hours. " +
+      "Available explorations: \n\n　•　`Lv. 5 ` exploration \n　•　`Lv. 10` exploration \n　•　`Lv. 15` " +
+      "exploration \n　•　`Lv. 20` exploration\n　•　`Lv. 25` exploration\n\nWhich exploration would you like to embark on?")
+      .setTitle("Embark on an exploration");
+    let row = Format.makeActionRow(message, "explore", ['Lv. 5', 'Lv. 10', 'Lv. 15', 'Lv. 20', 'Lv. 25']);
+    Format.awaitButton(message, row, embed, "explore", 30000, this.formatExploreReply, [user]);
+  }
+
+  static formatAchievements = function (message, args, user, messages) {
+    let contents = [];
     let embed = Format.makeEmbed().setThumbnail(message.author.avatarURL());
     let user_prog = user.data.achievement_prog;
     if (args.length != 0) {
@@ -134,7 +325,6 @@ class Format {
       for (let key of Object.keys(events.events)) {
         let event = events.events[key];
         if (event.achievement != undefined) {
-          console.log(user_prog)
           let id = event.achievement.id + 1;
           let header = '`' + id + '`　**' +
             event.achievement.name + "** `(" + (user_prog[id - 1] == undefined ? 0 : user_prog[id - 1]) + "/" + event.achievement.tiers + ")`";
@@ -153,43 +343,12 @@ class Format {
       party = new Party(args[3], args[4], args[1], args[0]);
       Party.parties.set(party.party_id, party);
       args[3].data.partyid = party.party_id;
-      updateUTIL.updateUser(args[3].id, args[3].lastmsg, arags[3].data, args[3].inventory,
+      updateUTIL.updateUser(args[3].id, args[3].lastmsg, args[3].data, args[3].inventory,
         args[3].equipped, args[3].profile, args[3].profile.hp);
     } else { party = Party.parties.get(partyid); party.joinParty(args[4], args[0]); }
     args[4].data.partyid = party.party_id;
     updateUTIL.updateUser(args[4].id, args[4].lastmsg, args[4].data, args[4].inventory,
       args[4].equipped, args[4].profile, args[4].profile.hp);
-  }
-
-  static awaitButtonHelper = async (message, filter, bot_msg, type, timer, replyFunction, args, isconfirm, retry, target_id) => {
-    bot_msg.awaitButtons(filter, {
-      max: 1,
-      time: timer,
-      errors: ['time']
-    }).then(async (collected) => {
-      const button = collected.get(Array.from(collected.keys())[0]);
-      button.reply.defer();
-      if ((target_id == undefined && button.clicker.id == message.author.id) ||
-        (target_id != undefined && button.clicker.id == target_id)) {
-        const arg = button.id.slice((message.author.id + type).length).trim();
-        if (isconfirm && arg != 'Confirm') { Format.sendMessage(message, messages.gen_messages.confirmation_cancel); return; }
-        replyFunction(message, arg, args);
-        if (retry) awaitButtonHelper(message, filter, bot_msg, type, timer, replyFunction, args, isconfirm, retry, target_id);
-      } else {
-        Format.awaitButtonHelper(message, filter, bot_msg, type, timer, replyFunction, args, isconfirm, retry, target_id);
-      }
-    }).catch(collected => {
-      console.log("Error: Waited too long for button reply.");
-      console.log(collected)
-      return;
-    })
-  }
-
-  static awaitButton = async (message, row, embed, type, timer, replyFunction, args = undefined, isconfirm = false, retry = false, target_id = undefined) => {
-    let filter = b => b.id.startsWith((target_id == undefined ? message.author.id : target_id) + type);
-    message.channel.send(embed, row).then((bot_msg) => {
-      Format.awaitButtonHelper(message, filter, bot_msg, type, timer, replyFunction, args, isconfirm, retry, target_id);
-    })
   }
 
   static formatInventory = function (message, args, contents, user) {
@@ -235,11 +394,8 @@ class Format {
         message.channel.send(string.substring(0, string.length - 1));
       }
     } else {
-      var items = "";
-      var armor = "";
-      var weapons = "";
-      var consumables = "";
-      var coffers = "";
+      var items = "", armor = "", weapons = "", consumables = "", rings = "", coffers = "",
+        misc = "";
       for (let key of keys) {
         var item = user.inventory[key];
         const name = Format.capitalizeFirsts(item.name);
@@ -247,13 +403,15 @@ class Format {
         else if (item.category.includes('armor')) armor += "[" + item.quantity + "x] " + name + "\n";
         else if (item.category.includes('weapons')) weapons += "[" + item.quantity + "x] " + name + "\n";
         else if (item.category.includes('consumables')) consumables += "[" + item.quantity + "x] " + name + "\n";
-        else if (item.category.includes('coffers')) coffers += "[" + item.quantity + "x] " + name + "\n"
+        else if (item.category.includes('rings')) rings += "[" + item.quantity + "x] " + name + "\n";
+        else if (item.category.includes('coffers')) coffers += "[" + item.quantity + "x] " + name + "\n";
       }
       const embed = Format.makeEmbed().setDescription(messages.inventoryembed.displaynofilter)
         .setTitle(message.author.tag + "'s Inventory")
         .addField('Items', items == "" ? "No items found." : items, true)
         .addField('Weapons', weapons == "" ? "No items found." : weapons, true)
         .addField('Armor', armor == "" ? "No items found." : armor, true)
+        .addField('Rings', rings == "" ? "No items found." : rings, true)
         .addField('Consumabless', consumables == "" ? "No items found." : consumables, true)
         .addField('Coffers', coffers == "" ? "No items found." : coffers, true)
         .addField('\u200b', "\u200b", true);
@@ -313,6 +471,13 @@ class Format {
     contents.push(achieve + " ".repeat(column - achieve.length) + date);
     contents.push("```");
     message.channel.send(contents);
+  }
+
+  static formatSellReply = function (message, _, args) {
+    let user = args[0];
+    updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, user.profile.hp);
+    if (args[1] == undefined) Format.sendMessage(message, messages.merchant.sell_all_success);
+    else Format.sendMessage(message, messages.merchant.sell_success.format(args[2], Format.capitalizeFirsts(args[1])));
   }
 
   static formatPurchaseReply = function (message, _, args) {
@@ -382,13 +547,6 @@ class Format {
     })
   }
 
-  static formatConfirmation = function (message, type, details, reply, args, target_id = undefined, alter_title = "") {
-    let row = Format.makeActionRow(message, type, Format.CONFIRMATION, true, target_id);
-    const embed = Format.makeEmbed().setDescription(details)
-      .setTitle((alter_title == "" ? "Confirm " : alter_title + " ") + type);
-    Format.awaitButton(message, row, embed, type, 20000, reply, args, true, false, target_id);
-  }
-
   static formatMerchantReply = function (message, choice, _) {
     var contents = [messages.merchant[choice], " "];
     for (let item_id of loot.merchant_loot[choice]) {
@@ -420,7 +578,7 @@ class Format {
     user.profile.job = job;
     user.equipped.abilities.push(basic);
     updateUTIL.updateUser(user.id, user.lastmsg, user.data, user.inventory, user.equipped, user.profile, undefined).then(function () {
-      Achievement.triggerEvent(message, user, 'advance', job.toLowerCase(), 1);
+      eventHandler.triggerEvent(message, user, 'advance', job.toLowerCase(), 1);
     })
   }
 
@@ -718,6 +876,8 @@ class Format {
             event_data: {},
             achievement_prog: [],
             titles: [], // Unlocked titles
+            quests_active: [],
+            quests_completed: []
           };
           const profile = {
             level: 1,

@@ -226,7 +226,6 @@ class Dungeon {
 
   attemptJoin(id = undefined, usergp = undefined, userdp = undefined, party = undefined) {
     while (this.joinLock) { }
-    console.log("acquired lock 229")
     this.joinLock = true;
     for (let i = 0; i < this.partyList.length; i++) {
       let dunparty = this.partyList[i];
@@ -238,7 +237,6 @@ class Dungeon {
       }
     }
     if (this.partyList.length < this.maxParties) return this.joinParty(this.partyList.length, id, usergp, userdp, party);
-    console.log("released lock 241")
     this.joinLock = false;
     return -1;
   }
@@ -250,12 +248,10 @@ class Dungeon {
       let user = { id: id, tag: userdp.tag, combat: combat, usergp: usergp, userdp: userdp };
       if (oldparty != undefined) {
         oldparty.members.push(user);
-        console.log("released lock 254")
         this.joinLock = false;
       } else {
         let dunparty = { locked: false, members: [user] };
         this.partyList[index] = dunparty;
-        console.log("released lock 258")
         this.joinLock = false;
       }
       return oldparty;

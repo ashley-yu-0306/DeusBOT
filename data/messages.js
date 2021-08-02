@@ -3,27 +3,42 @@ const prefix = process.env.PREFIX;
 const divider = '======================================================\n'
 
 exports.merchant = {
-  bio: `The old merchant: "*Well, well... I'm sure I have some wares for the likes of you. Why don't you browse around, hmm?*"\n`,
+  bio: `The old merchant: "*Hello, I'm back here! Oh, I haven't had a visitor in a while! Welcome! Please, tell me, honey, what would you like?*"\n`,
   bio_helper: 'Select a category to proceed.',
   purchase_helper: 'To purchase an item, use `' + prefix + 'buy <quantity> <item name>`. ',
   Consumables: `*"Alright I've got most of the consumables you can find right here in my store, alright? Don't be so picky now, I'm sure some of these will suit your needs!"*`,
   Consumables_helper: "To equip a consumable, use `" + prefix + "equip <slot #> <item name>`. To use an equipped consumable, use `" + prefix + "use <slot #>`.",
   item_not_sold: [
-    `The old merchant: "*I'm but a frail, old woman. Now how would you expect me to get my hands on that?! Pick something else, now!*"`,
-    `The old merchant: "*There is not a single merchant in the Great Plains who would get you that! Pick something else, now!*"`,
-    `The old merchant: "*By the Gods you are quite the demanding traveler! Pick something that I have in stock, would ya?!*"`,
-    `The old merchant: "*A what now? Where do you even get something like that! Pick something that I have in stock, would ya?!*"`,
-    `The old merchant: "*Look at the shelves! What I've got is what you can get! Pick something that I have in stock, would ya?!*"`,
-    `The old merchant: "*Oh dear, travelers nowdays are getting too creative! Back in the day it was just a couple of pots here, a couple of pots there... Pick something that I have in stock, would ya?!*"`,
-    `The old merchant: "*What did you just ask for? Listen, I'm sorry honey, I'm a little busy right now. Pick something that I have on the shelves, alright?*"`
+    `The old merchant: "*I'm sorry, dear, but I am but a frail, old woman and I do not have the means to get that. Is there anything else you would like?*"`,
+    `The old merchant: "*Oh, dear, do they sell those on the Great Plains now? My, I'm getting old... Is there anything else you would like?*"`,
+    `The old merchant: "*I do not think I have that here. Perhaps granny can get you something else from these shelves?*"`,
+    `The old merchant: "*Oh, no, dear, would you mind if I did not have that in stock? Perhaps granny can get you something else from these shelves?*"`,
+    `The old merchant: "*Oh, you know me, darling. I do not sell such a thing here. Perhaps granny can get you something else from these shelves?*"`,
+    `The old merchant: "*I do not have that in stock, but maybe I can look for that next I go out. How about a small cookie for now? I baked it myself, back in my house. It's still warm!*"`,
+    `The old merchant: "*Hmm, I don't have that, but-- oh! How about a small cookie for now? I baked it myself, back in my house. It's still warm!*"`
+  ],
+  item_not_bought: [
+    `The old merchant: "*Oh no, I can't accept this, I'm sure it's rare! Really, you should keep it! I'm sure you would put it to great use, dear.*"`,
+    `The old merchant: "*That looks amazing! I do not think I can make the most out of it, though. Really, you should keep it! I'm sure you would put it to great use, dear.*"`,
+    `The old merchant: "*Oh dear, that looks valuable! Really, you should keep it! I'm sure you would put it to great use, dear.*"`,
+    `The old merchant: "*I just know you went through a lot to get that! Really, you should keep it! I'm sure you would put it to great use, dear.*"`,
+    `The old merchant: "*By the looks of it, I just know it's quite the rare item! Really, you should keep it! I'm sure you would put it to great use, dear.*"`,
+    `The old merchant: "*My son was telling me about that the other day! I heard it's quite valuable! Really, you should keep it! I'm sure you would put it to great use, dear.*"`,
+    `The old merchant: "*A what! Oh dear- Adventurers would do anything to get their hands on that! Really, you should keep it! I'm sure you would put it to great use, dear.*"`,
   ],
   purchase_initiate: 'You are about to purchase [{0}x {1}] for {2} gold. Your remaining balance will be {3} gold. Proceed?',
   purchase_success: 'Successfully purchased [{0}x {1}].',
+  sell_initiate: 'You are about to sell [{0}x {1}] for {2} gold. You will have {3} of that item left. Proceed?',
+  sell_all_initiate: 'You are about to sell all of your items under the "Items" category for {0} gold. Proceed?',
+  sell_success: 'Successfully sold [{0}x {1}].',
+  sell_all_success: 'Successfully sold all of your items under the "Items" category.',
+  no_items: "You do not have items in your inventory under the category 'items'. Please try again with an individual item."
 }
 
 exports.syntax = {
   set_channel: 'Syntax: `' + prefix + 'setchannel <party #> <channel>` (example: ' + prefix + 'setchannel 3 #dungeon-3)',
   buy: 'Syntax: `' + prefix + 'buy <optional: item quantity> <item name>` (example: ' + prefix + 'buy 2 small health pot)',
+  sell: 'Syntax: `' + prefix + 'sell <optional: item quantity> <item name>` (example: ' + prefix + 'sell 2 small health pot)',
   achievements: 'Syntax: `' + prefix + 'achievements <optional: achievement #>` (example: ' + prefix + 'achievements 2)',
   equip: 'Syntax: `' + prefix + 'equip <set name> <piece name>` (example: ' + prefix + 'equip wooden pants)',
   open: 'Syntax: `' + prefix + 'open <set name>` (example: ' + prefix + 'open broken)',
@@ -163,6 +178,9 @@ exports.trade = {
 
 exports.gen_messages = {
   advance_success: "Alas, adventurer. You continue to impress me. Please refer to \`" + prefix + "help\` for more information about your new class.",
+  confirm: '{0} has confirmed the operation.',
+  cancel: '{0} has canceled the operation.',
+  caravan_begin: '*The caravan sets out, heading into the wilderness. We should be back in 2 hours.*'
 }
 
 exports.gen_errors = {
@@ -179,6 +197,8 @@ exports.gen_errors = {
   no_such_user: 'There is no user with ID {0} in your server. Please try again with a valid user.',
   self_has_acc: 'You already have a character! For more guidance, enter `' + prefix + 'help`.',
   missing_args: "Missing arguments. Please try again with the missing arguments.",
+  enter_again: "An error has occurred. Please enter the command again.",
+  not_enough_items: "You do not have enough of that item do to that. Please try again with a lesser quantity.",
 
   deusintroduction1: 'Welcome, adventurer! I will occassionaally send messages to notify you of information related to your journey in this direct message channel. This includes the following:',
   deusintroduction2: '\n\t\t\t\t• Party-related notifications\n\t\t\t\t• ...and more!\n',

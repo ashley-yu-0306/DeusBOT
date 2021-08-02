@@ -17,6 +17,16 @@ module.exports = {
       if (subcommands.includes(args[0])) {
         let sc = args[0];
         let party = Party.parties.get(user.data.partyid);
+        if (party == undefined && (user.data.partyid != -1 || (sc != 'invite' &&
+          sc != 'i' && sc != 'inv'))) {
+          if (user.data.partyid != -1) {
+            user.data.partyid = -1;
+            updateUTIL.updateUser(user.id, user.lastmsg, user.data,
+              user.inventory, user.equipped, user.profile, user.profile.hp);
+            Format.sendMessage(message, gen_errors.enter_again);
+          } else Format.sendMessage(message, messages.not_in_party);
+          return;
+        }
         if (sc == 'invite' || sc == 'i' || sc == 'inv') {
           if (args[1].length < 10) return;
           let target_id = args[1].slice(3);

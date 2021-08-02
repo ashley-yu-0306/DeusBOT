@@ -1,4 +1,30 @@
-id,name,verb,description,apcost,shopcost,target,stat_id,stat_change,base,source,category1,category2
-0,small health pot, restored ,Heals 15% of your maximum HP.,5,150,user,0,0.15,max_hp,user,consumables,
-1,large health pot, restored ,Heals 35% of your maximum HP.,10,300,user,0,0.35,max_hp,user,consumables,
-2,broken gear coffer,,Contains Broken gear and miscellaneous loot.,,,,,,,,coffers,
+id,name,verb,origin,description,tradable,apcost,shopcost,sellcost,target,stat_id,stat_change,base,source,category1,category2
+0,small health pot, restored ,"exploration event (many), dungeon coffers, merchant",Heals 15% of your maximum HP.,true,5,150,75,user,0,0.15,max_hp,user,consumables,
+1,large health pot, restored ,"dungeon coffers, merchant",Heals 35% of your maximum HP.,true,10,300,150,user,0,0.35,max_hp,user,consumables,
+2,broken gear coffer,,"Cavern dungeon completion reward",Contains Broken gear and miscellaneous loot.,true,,100,,,,,,,coffers,
+3,scroll of protection,,"exploration event (traveling merchant)",Prevents any negative events from occurring on the first exploration that occurs after this scroll's consumption.,true,,100,10,,,,,,consumables,
+4,bag of seeds,,"exploration event (traveling merchant)",A small bag of seeds. This should be sold to the merchant.,true,,,300,,,,,,items,
+5,coin of ragnard,,"exploration event (traveling merchant)",A rare coin belonging to the forgotten civilization of Ragnard. This should be sold to the merchaant.,true,,,600,,,,,,items,
+6,pinwheel,,"exploration event (traveling merchant)",A functioning pinwheel that spins nicely when you blow at it. This should be sold to the merchant.,true,,,200,,,,,,items,
+7,miniature goblin,,"exploration event (traveling merchant)",A small replica of a cave goblin. This should be sold to the merchant.,true,,,400,,,,,,items,
+8,gold bar,,"exploration event (abandoned wagon)",A heavy bar of gold. Seems to be authentic. This should be sold to the merchant.,true,,,1900,,,,,,items,
+9,silver dagger,,"exploration event (abandoned wagon)",A dagger made out of pure silver. Seems to be authentic. This should be sold to the merchant.,true,,,1100,,,,,,items,
+10,ancient trinkets,,"exploration event (abandoned wagon)",An ancient trinket that seems to have been crafted by a skilled artisan. This should be sold to the merchant.,true,,,900,,,,,,items,
+11,small wooden box,,"exploration event (carpenter)",A small wooden box that is clearly made by a skilled artisan. This should be sold to the merchant.,true,,,150,,,,,,items,
+12,small cookie, restored ,"exploration event (many)",Heals 5% of your maximum HP.,true,5,50,25,user,0,0.05,max_hp,user,consumables,
+13,old music box,,"exploration event (carpenter)",A music box that does not appear to play music anymore. This should be sold to the merchant.,true,,,60,,,,,,items,
+14,bunch of flowers,,"exploration event (mother)",A small bunch of flowers. This should be sold to the merchant,true,,,60,,,,,,items,
+15,hand-knit scarf,,"exploration event (mother)",A comfortable scarf made with colorful yarn. This should be sold to the merchant.,true,,,150,,,,,,items,
+16,ring of lesser luck,,"exploration event (small town jeweler)",Adds 10 to the roll that the wearer gets during exploration roll-events. This does not include loot distribution.,true,,,10,,,,,,ring,equipment
+17,ring of mending,,"exploration event (small town jeweler)",Passively recover 2 times more health when resting.,true,,,,,,,,,ring,equipment
+18,scroll of the winged,,"exploration event (lone adventurer)",Halves the time it takes for the first exploration that occurs after this scroll's consumption to complete. This scroll's effect does not stack.,true,,,10,,,,,,consumables,
+19,scroll of the intelligent,,"exploration event (lone adventurer)",Doubles the EXP that the user gets for the next two explorations that occur after this scroll's consumption. This scroll's effect does not stack.,true,,,,,,,,,consumables,
+20,ring of wealth,,"exploration event (small town jeweler)",Triples the amount of gold that the wearer gets during explorations,false,,,,,,,,,ring,equipment
+21,ring of the holy,,"exploration event (lone adventurer)","Prevents a user of the wearer's party, including the wearer, from dying in an exploration. This can happen a maximum of once per exploration.",false,,,,,,,,,ring,equipment
+22,ring of haggling,,"exploration event (small town jeweler)","All items in the merchant store are discounted by 10% for the wearer.",true,,,,,,,,,ring,equipment
+23,ring of mysteries,,"exploration event (lone adventurer)","Completes the achievement [Mysterious] when worn.",false,,,,,,,,,ring,equipment
+24,map to demon lair,,"rare exploration event ()","Begins the battle against '' upon consumption.",true,,,100,,,,,,consumables,
+
+
+
+
